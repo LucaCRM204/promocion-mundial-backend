@@ -1,0 +1,19 @@
+{
+  "name": "promocion-mundial-2026/backend",
+  "description": "Backend API para Sistema Promoción Mundial 2026",
+  "type": "project",
+  "require": {
+    "php": ">=7.4",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*", 
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-fileinfo": "*"
+  },
+  "autoload": {
+    "files": [
+      "config/database.php",
+      "utils/functions.php"
+    ]
+  }
+}
