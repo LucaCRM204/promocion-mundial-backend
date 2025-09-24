@@ -3,17 +3,11 @@
   "description": "Backend API para Sistema Promoción Mundial 2026",
   "type": "project",
   "require": {
-    "php": ">=7.4",
+    "php": "^8.0",
     "ext-pdo": "*",
     "ext-pdo_mysql": "*", 
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-fileinfo": "*"
-  },
-  "autoload": {
-    "files": [
-      "config/database.php",
-      "utils/functions.php"
-    ]
   }
 }
