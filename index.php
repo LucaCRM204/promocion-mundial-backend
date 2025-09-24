@@ -1,5 +1,4 @@
 <?php
-// index.php - Punto de entrada del backend
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -10,27 +9,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Mostrar información básica de la API
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/') {
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Respuesta básica para la raíz
+if ($path === '/' || $path === '/index.php') {
     echo json_encode([
         'message' => 'API Promoción Mundial 2026',
-        'version' => '1.0.0',
         'status' => 'active',
-        'endpoints' => [
-            '/api/register' => 'POST - Registro de usuarios',
-            '/api/login' => 'POST - Login de usuarios',
-            '/api/admin-login' => 'POST - Login administrativo',
-            '/api/upload-comprobante' => 'POST - Subir comprobante',
-            '/api/validate-comprobante' => 'POST - Validar comprobante',
-            '/api/get-clients' => 'GET - Obtener clientes',
-            '/api/get-user-data' => 'GET - Datos de usuario',
-            '/api/claim-prize' => 'POST - Reclamar premio',
-            '/api/health' => 'GET - Estado del sistema'
-        ]
+        'version' => '1.0.0'
     ]);
     exit;
 }
 
-// Redirigir a la API
-require_once 'api/index.php';
+// Health check
+if ($path === '/api/health' || $path === '/health') {
+    echo json_encode([
+        'status' => 'healthy',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'version' => '1.0.0'
+    ]);
+    exit;
+}
+
+// Otras rutas
+echo json_encode(['error' => 'Endpoint no encontrado']);
+http_response_code(404);
 ?>
