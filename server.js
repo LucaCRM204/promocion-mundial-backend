@@ -83,7 +83,25 @@ try {
 } catch (error) {
     console.error('Error cargando datos:', error);
 }
-
+// Middleware de autenticación opcional (no bloquea, solo decodifica si existe token)
+app.use((req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (token) {
+        try {
+            const jwt = require('jsonwebtoken');
+            const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key';
+            const decoded = jwt.verify(token, JWT_SECRET);
+            req.user = decoded;
+        } catch (error) {
+            // Token inválido, pero no bloqueamos la request
+            req.user = null;
+        }
+    }
+    
+    next();
+});
 // Rutas
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
