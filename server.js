@@ -1,21 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const path = require('path');
-const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Datos en memoria (en producción usarías una base de datos)
+// Datos en memoria
 let users = [];
 let comprobantes = [];
-let premios = [];
 
 // USUARIOS ADMINISTRADORES POR DEFECTO
 const adminUsers = [
@@ -24,94 +27,137 @@ const adminUsers = [
         username: 'validador',
         password: bcrypt.hashSync('validador2026', 10),
         nombre: 'Validador',
-        rol: 'validator',
-        email: 'validador@vw.com'
+        rol: 'validator'
     },
     {
         id: 'admin-2',
         username: 'responsable',
         password: bcrypt.hashSync('responsable2026', 10),
         nombre: 'Responsable',
-        rol: 'responsable',
-        email: 'responsable@vw.com'
+        rol: 'responsable'
     },
     {
         id: 'admin-3',
         username: 'owner',
         password: bcrypt.hashSync('owner2026', 10),
         nombre: 'Dueño',
-        rol: 'owner',
-        email: 'owner@vw.com'
+        rol: 'owner'
     }
 ];
 
-// Compartir datos entre archivos
-app.locals.users = users;
-app.locals.comprobantes = comprobantes;
-app.locals.premios = premios;
-app.locals.adminUsers = adminUsers;
-
-// Función para guardar datos
-app.locals.saveData = function() {
-    const data = {
-        users,
-        comprobantes,
-        premios,
-        lastUpdate: new Date().toISOString()
-    };
-    
-    try {
-        fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
-        console.log('Datos guardados correctamente');
-    } catch (error) {
-        console.error('Error guardando datos:', error);
-    }
-};
-
-// Cargar datos al iniciar
-try {
-    if (fs.existsSync('data.json')) {
-        const data = JSON.parse(fs.readFileSync('data.json', 'utf8'));
-        users = data.users || [];
-        comprobantes = data.comprobantes || [];
-        premios = data.premios || [];
-        app.locals.users = users;
-        app.locals.comprobantes = comprobantes;
-        app.locals.premios = premios;
-        console.log('Datos cargados correctamente');
-    }
-} catch (error) {
-    console.error('Error cargando datos:', error);
-}
-// Middleware de autenticación opcional (no bloquea, solo decodifica si existe token)
-app.use((req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (token) {
-        try {
-            const jwt = require('jsonwebtoken');
-            const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key';
-            const decoded = jwt.verify(token, JWT_SECRET);
-            req.user = decoded;
-        } catch (error) {
-            // Token inválido, pero no bloqueamos la request
-            req.user = null;
-        }
-    }
-    
-    next();
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
-// Rutas
-const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
-const comprobantesRoutes = require('./routes/comprobantes');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api', comprobantesRoutes);
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
 
-// Ruta de login para administradores
+app.get('/', (req, res) => {
+    res.json({
+        message: 'API Promoción Mundial 2026',
+        status: 'active',
+        version: '1.0.0'
+    });
+});
+
+// REGISTRO DE CLIENTE
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, password } = req.body;
+        
+        if (!nombre || !apellido || !dni || !email || !password) {
+            return res.status(400).json({ error: 'Faltan campos obligatorios' });
+        }
+        
+        const existingUser = users.find(u => u.email === email || u.dni === dni);
+        if (existingUser) {
+            return res.status(400).json({ error: 'Ya existe un usuario con ese email o DNI' });
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const newUser = {
+            id: users.length + 1,
+            nombre,
+            apellido,
+            dni,
+            email,
+            telefono,
+            plan: plan || 'No especificado',
+            direccion,
+            localidad,
+            cp,
+            password: hashedPassword,
+            role: 'cliente',
+            created_at: new Date().toISOString()
+        };
+        
+        users.push(newUser);
+        
+        const token = jwt.sign(
+            { id: newUser.id, email: newUser.email, role: newUser.role },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        
+        const { password: _, ...userResponse } = newUser;
+        
+        res.json({
+            success: true,
+            token,
+            user: userResponse,
+            message: 'Usuario registrado exitosamente'
+        });
+        
+    } catch (error) {
+        console.error('Error en registro:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// LOGIN DE CLIENTE
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+        }
+        
+        const user = users.find(u => u.email === email);
+        if (!user) {
+            return res.status(400).json({ error: 'Credenciales inválidas' });
+        }
+        
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: 'Credenciales inválidas' });
+        }
+        
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        
+        const { password: _, ...userResponse } = user;
+        
+        res.json({
+            success: true,
+            token,
+            user: userResponse,
+            message: 'Login exitoso'
+        });
+        
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// LOGIN DE ADMINISTRADOR
 app.post('/api/admin-login', async (req, res) => {
     try {
         const { username, password, role } = req.body;
@@ -134,8 +180,7 @@ app.post('/api/admin-login', async (req, res) => {
                 id: admin.id,
                 username: admin.username,
                 nombre: admin.nombre,
-                rol: admin.rol,
-                email: admin.email
+                rol: admin.rol
             },
             message: 'Login exitoso'
         });
@@ -146,13 +191,14 @@ app.post('/api/admin-login', async (req, res) => {
     }
 });
 
-// Ruta para obtener clientes
+// OBTENER CLIENTES
 app.get('/api/get-clients', (req, res) => {
     try {
         const clientsWithStats = users.map(user => {
             const userComprobantes = comprobantes.filter(c => c.usuario_id === user.id);
             return {
                 ...user,
+                password: undefined,
                 pendientes: userComprobantes.filter(c => c.estado === 'pending').length,
                 validados: userComprobantes.filter(c => c.estado === 'validated').length
             };
@@ -168,15 +214,14 @@ app.get('/api/get-clients', (req, res) => {
     }
 });
 
-// Ruta para obtener estadísticas
+// OBTENER ESTADÍSTICAS
 app.get('/api/get-stats', (req, res) => {
     try {
         const stats = {
             total_usuarios: users.length,
             comprobantes_pending: comprobantes.filter(c => c.estado === 'pending').length,
             comprobantes_validated: comprobantes.filter(c => c.estado === 'validated').length,
-            comprobantes_rejected: comprobantes.filter(c => c.estado === 'rejected').length,
-            premios_entregados: premios.filter(p => p.entregado).length
+            comprobantes_rejected: comprobantes.filter(c => c.estado === 'rejected').length
         };
 
         res.json({
@@ -189,35 +234,62 @@ app.get('/api/get-stats', (req, res) => {
     }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-    });
+// SUBIR COMPROBANTE
+app.post('/api/upload-comprobante', (req, res) => {
+    try {
+        const { usuario_id, numero_cuota } = req.body;
+        
+        const newComprobante = {
+            id: comprobantes.length + 1,
+            usuario_id: parseInt(usuario_id),
+            numero_cuota: parseInt(numero_cuota),
+            estado: 'pending',
+            fecha_subida: new Date().toISOString()
+        };
+        
+        comprobantes.push(newComprobante);
+        
+        res.json({
+            success: true,
+            filename: `comprobante-${numero_cuota}.pdf`,
+            size: '120 KB'
+        });
+        
+    } catch (error) {
+        console.error('Error subiendo comprobante:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-    });
+// OBTENER DATOS DE USUARIO
+app.get('/api/get-user-data', (req, res) => {
+    try {
+        const { usuario_id } = req.query;
+        const userComprobantes = comprobantes.filter(c => c.usuario_id === parseInt(usuario_id));
+        
+        res.json({
+            success: true,
+            comprobantes: userComprobantes
+        });
+    } catch (error) {
+        console.error('Error obteniendo datos:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
-// Ruta raíz
-app.get('/', (req, res) => {
-    res.json({
-        message: 'API Promoción Mundial 2026',
-        status: 'active',
-        version: '1.0.0',
-        endpoints: {
-            health: '/health',
-            auth: '/api/auth/*',
-            admin: '/api/admin/*'
-        }
-    });
+// RECLAMAR PREMIO
+app.post('/api/claim-prize', (req, res) => {
+    try {
+        const { usuario_id, numero_cuota, nombre_premio } = req.body;
+        
+        res.json({
+            success: true,
+            message: 'Premio reclamado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error reclamando premio:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
 // Iniciar servidor
