@@ -2,27 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key-ultra-segura';
-
-// Configuración de multer para subida de archivos
-const storage = multer.memoryStorage();
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Tipo de archivo no permitido. Solo JPG, PNG o PDF'));
-        }
-    }
-});
 
 // Middleware
 app.use(cors({
@@ -30,8 +13,8 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Base de datos en memoria
 let users = [];
@@ -130,7 +113,6 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ message: 'Faltan campos obligatorios' });
         }
         
-        // Verificar si ya existe
         const existingUser = users.find(u => u.email === email || u.dni === dni);
         if (existingUser) {
             return res.status(400).json({ message: 'Ya existe un usuario con ese email o DNI' });
@@ -187,12 +169,10 @@ app.post('/api/auth/login', async (req, res) => {
         let user = null;
         let isAdmin = false;
 
-        // Si viene un role específico, es login de admin
         if (role && role !== 'cliente') {
             user = adminUsers.find(u => u.email === email && u.role === role);
             isAdmin = true;
         } else {
-            // Login de cliente
             user = users.find(u => u.email === email);
         }
         
@@ -247,21 +227,15 @@ app.get('/api/cuotas/mis-cuotas', authenticateToken, (req, res) => {
     }
 });
 
-// SUBIR COMPROBANTE
-app.post('/api/cuotas/subir', authenticateToken, upload.single('comprobante'), (req, res) => {
+// SUBIR COMPROBANTE (SIN MULTER - usando FormData del frontend)
+app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
     try {
-        const { numero } = req.body;
-        const file = req.file;
+        const { numero, comprobante } = req.body;
         
-        if (!file) {
-            return res.status(400).json({ message: 'No se proporcionó archivo' });
+        if (!comprobante || !numero) {
+            return res.status(400).json({ message: 'Número de cuota y archivo requeridos' });
         }
 
-        if (!numero) {
-            return res.status(400).json({ message: 'Número de cuota requerido' });
-        }
-
-        // Verificar si ya existe una cuota para este número
         const existingCuota = cuotas.find(c => 
             c.usuario_id === req.user.id && 
             c.numero === parseInt(numero)
@@ -271,10 +245,9 @@ app.post('/api/cuotas/subir', authenticateToken, upload.single('comprobante'), (
             return res.status(400).json({ message: 'Ya existe un comprobante pendiente para esta cuota' });
         }
 
-        // Si existe pero fue rechazada, permitir resubir
         if (existingCuota && existingCuota.estado === 'rechazado') {
             existingCuota.estado = 'pendiente';
-            existingCuota.archivo = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+            existingCuota.archivo = comprobante;
             existingCuota.fecha_subida = new Date().toISOString();
             existingCuota.motivo_rechazo = null;
             
@@ -284,13 +257,12 @@ app.post('/api/cuotas/subir', authenticateToken, upload.single('comprobante'), (
             });
         }
 
-        // Crear nueva cuota
         const nuevaCuota = {
             id: nextCuotaId++,
             usuario_id: req.user.id,
             numero: parseInt(numero),
             estado: 'pendiente',
-            archivo: `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
+            archivo: comprobante,
             fecha_subida: new Date().toISOString(),
             motivo_rechazo: null,
             fecha_validacion: null
@@ -313,10 +285,9 @@ app.post('/api/cuotas/subir', authenticateToken, upload.single('comprobante'), (
 // RUTAS DE ADMINISTRACIÓN
 // ============================================
 
-// OBTENER TODOS LOS CLIENTES (con estadísticas)
+// OBTENER TODOS LOS CLIENTES
 app.get('/api/admin/clientes', authenticateToken, (req, res) => {
     try {
-        // Verificar que sea admin
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
@@ -393,7 +364,6 @@ app.get('/api/admin/clientes/:id/cuotas', authenticateToken, (req, res) => {
 // VALIDAR O RECHAZAR CUOTA
 app.put('/api/admin/cuotas/:id/validar', authenticateToken, (req, res) => {
     try {
-        // Solo validator y owner pueden validar
         if (req.user.role !== 'validator' && req.user.role !== 'owner') {
             return res.status(403).json({ message: 'No tienes permisos para validar cuotas' });
         }
@@ -429,11 +399,7 @@ app.put('/api/admin/cuotas/:id/validar', authenticateToken, (req, res) => {
     }
 });
 
-// ============================================
-// RUTAS ADICIONALES PARA COMPATIBILIDAD
-// ============================================
-
-// OBTENER ESTADÍSTICAS GENERALES
+// OBTENER ESTADÍSTICAS
 app.get('/api/admin/estadisticas', authenticateToken, (req, res) => {
     try {
         if (req.user.role === 'cliente') {
@@ -456,7 +422,7 @@ app.get('/api/admin/estadisticas', authenticateToken, (req, res) => {
     }
 });
 
-// ENDPOINT PARA LIMPIAR DATOS (solo en desarrollo)
+// RESETEAR DATOS (solo owner)
 app.post('/api/admin/reset-data', authenticateToken, (req, res) => {
     try {
         if (req.user.role !== 'owner') {
@@ -476,16 +442,15 @@ app.post('/api/admin/reset-data', authenticateToken, (req, res) => {
     }
 });
 
-// Manejo de errores global
+// Manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
-        message: err.message || 'Error interno del servidor',
-        error: process.env.NODE_ENV === 'development' ? err : {}
+        message: err.message || 'Error interno del servidor'
     });
 });
 
-// Ruta 404
+// 404
 app.use((req, res) => {
     res.status(404).json({ 
         message: 'Ruta no encontrada',
@@ -498,20 +463,20 @@ app.listen(PORT, () => {
     console.log('\n===========================================');
     console.log('🏆 PROMOCIÓN MUNDIAL 2026 - API ACTIVA');
     console.log('===========================================');
-    console.log(`\n🌐 Servidor corriendo en puerto: ${PORT}`);
-    console.log(`📅 Fecha: ${new Date().toLocaleString('es-AR')}`);
-    console.log('\n🔐 CREDENCIALES DE ADMINISTRACIÓN:');
-    console.log('\n👤 VALIDADOR (Solo validación):');
+    console.log(`\n🌐 Puerto: ${PORT}`);
+    console.log(`📅 ${new Date().toLocaleString('es-AR')}`);
+    console.log('\n🔐 CREDENCIALES ADMIN:');
+    console.log('\n👤 VALIDADOR:');
     console.log('   Email: validator@mundial2026.com');
-    console.log('   Password: validator2026');
-    console.log('\n👤 RESPONSABLE (Gestión operativa):');
+    console.log('   Pass: validator2026');
+    console.log('\n👤 RESPONSABLE:');
     console.log('   Email: responsable@mundial2026.com');
-    console.log('   Password: responsable2026');
-    console.log('\n👤 DUEÑO (Acceso completo):');
+    console.log('   Pass: responsable2026');
+    console.log('\n👤 DUEÑO:');
     console.log('   Email: owner@mundial2026.com');
-    console.log('   Password: owner2026');
+    console.log('   Pass: owner2026');
     console.log('\n===========================================');
-    console.log('✅ Sistema listo para recibir peticiones');
+    console.log('✅ Sistema listo');
     console.log('===========================================\n');
 });
 
