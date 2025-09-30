@@ -19,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 // Datos en memoria
 let users = [];
 let comprobantes = [];
+let premios = [];
 
 // USUARIOS ADMINISTRADORES POR DEFECTO
 const adminUsers = [
@@ -197,10 +198,19 @@ app.get('/api/get-clients', (req, res) => {
         const clientsWithStats = users.map(user => {
             const userComprobantes = comprobantes.filter(c => c.usuario_id === user.id);
             return {
-                ...user,
-                password: undefined,
+                id: user.id,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                dni: user.dni,
+                email: user.email,
+                telefono: user.telefono,
+                plan: user.plan,
+                direccion: user.direccion,
+                localidad: user.localidad,
+                cp: user.cp,
                 pendientes: userComprobantes.filter(c => c.estado === 'pending').length,
-                validados: userComprobantes.filter(c => c.estado === 'validated').length
+                validados: userComprobantes.filter(c => c.estado === 'validated').length,
+                rechazados: userComprobantes.filter(c => c.estado === 'rejected').length
             };
         });
 
@@ -214,6 +224,35 @@ app.get('/api/get-clients', (req, res) => {
     }
 });
 
+// OBTENER CLIENTE POR ID
+app.get('/api/get-client/:id', (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const user = users.find(u => u.id === userId);
+        
+        if (!user) {
+            return res.status(404).json({ error: 'Cliente no encontrado' });
+        }
+        
+        const userComprobantes = comprobantes.filter(c => c.usuario_id === userId);
+        const userPremios = premios.filter(p => p.usuario_id === userId);
+        
+        const { password, ...userResponse } = user;
+        
+        res.json({
+            success: true,
+            client: {
+                ...userResponse,
+                comprobantes: userComprobantes,
+                premios: userPremios
+            }
+        });
+    } catch (error) {
+        console.error('Error obteniendo cliente:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 // OBTENER ESTADÍSTICAS
 app.get('/api/get-stats', (req, res) => {
     try {
@@ -221,7 +260,8 @@ app.get('/api/get-stats', (req, res) => {
             total_usuarios: users.length,
             comprobantes_pending: comprobantes.filter(c => c.estado === 'pending').length,
             comprobantes_validated: comprobantes.filter(c => c.estado === 'validated').length,
-            comprobantes_rejected: comprobantes.filter(c => c.estado === 'rejected').length
+            comprobantes_rejected: comprobantes.filter(c => c.estado === 'rejected').length,
+            premios_totales: premios.length
         };
 
         res.json({
@@ -244,14 +284,15 @@ app.post('/api/upload-comprobante', (req, res) => {
             usuario_id: parseInt(usuario_id),
             numero_cuota: parseInt(numero_cuota),
             estado: 'pending',
-            fecha_subida: new Date().toISOString()
+            fecha_subida: new Date().toISOString(),
+            nombre_archivo: `comprobante-cuota-${numero_cuota}.pdf`
         };
         
         comprobantes.push(newComprobante);
         
         res.json({
             success: true,
-            filename: `comprobante-${numero_cuota}.pdf`,
+            filename: `comprobante-cuota-${numero_cuota}.pdf`,
             size: '120 KB'
         });
         
@@ -277,10 +318,75 @@ app.get('/api/get-user-data', (req, res) => {
     }
 });
 
+// VALIDAR COMPROBANTE
+app.put('/api/validate-comprobante/:id', (req, res) => {
+    try {
+        const comprobanteId = parseInt(req.params.id);
+        const comprobante = comprobantes.find(c => c.id === comprobanteId);
+        
+        if (!comprobante) {
+            return res.status(404).json({ error: 'Comprobante no encontrado' });
+        }
+        
+        comprobante.estado = 'validated';
+        comprobante.fecha_validacion = new Date().toISOString();
+        
+        // Crear premio
+        const nuevoPremio = {
+            id: premios.length + 1,
+            usuario_id: comprobante.usuario_id,
+            numero_cuota: comprobante.numero_cuota,
+            estado: 'disponible',
+            fecha_creacion: new Date().toISOString()
+        };
+        premios.push(nuevoPremio);
+        
+        res.json({
+            success: true,
+            message: 'Comprobante validado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error validando comprobante:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// RECHAZAR COMPROBANTE
+app.put('/api/reject-comprobante/:id', (req, res) => {
+    try {
+        const comprobanteId = parseInt(req.params.id);
+        const { motivo } = req.body;
+        const comprobante = comprobantes.find(c => c.id === comprobanteId);
+        
+        if (!comprobante) {
+            return res.status(404).json({ error: 'Comprobante no encontrado' });
+        }
+        
+        comprobante.estado = 'rejected';
+        comprobante.motivo_rechazo = motivo || 'No especificado';
+        comprobante.fecha_rechazo = new Date().toISOString();
+        
+        res.json({
+            success: true,
+            message: 'Comprobante rechazado'
+        });
+    } catch (error) {
+        console.error('Error rechazando comprobante:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 // RECLAMAR PREMIO
 app.post('/api/claim-prize', (req, res) => {
     try {
         const { usuario_id, numero_cuota, nombre_premio } = req.body;
+        
+        const premio = premios.find(p => p.usuario_id === parseInt(usuario_id) && p.numero_cuota === parseInt(numero_cuota));
+        
+        if (premio) {
+            premio.estado = 'reclamado';
+            premio.fecha_reclamo = new Date().toISOString();
+        }
         
         res.json({
             success: true,
