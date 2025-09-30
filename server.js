@@ -2,42 +2,42 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key-ultra-segura';
 
 // Middleware
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Base de datos en memoria
+// Servir archivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Base de datos en memoria (reemplaza esto con tu DB real si tienes)
 let users = [];
 let cuotas = [];
 let nextUserId = 1;
 let nextCuotaId = 1;
 
-// USUARIOS ADMINISTRADORES POR DEFECTO
+// Admins predefinidos
 const adminUsers = [
     {
         id: 'admin-validator',
         email: 'validator@mundial2026.com',
         password: bcrypt.hashSync('validator2026', 10),
         nombre: 'María',
-        apellido: 'Validadora',
+        apellido: 'González',
         role: 'validator'
     },
     {
         id: 'admin-responsable',
         email: 'responsable@mundial2026.com',
         password: bcrypt.hashSync('responsable2026', 10),
-        nombre: 'Carlos',
-        apellido: 'Responsable',
+        nombre: 'Ana',
+        apellido: 'García',
         role: 'responsable'
     },
     {
@@ -45,7 +45,7 @@ const adminUsers = [
         email: 'owner@mundial2026.com',
         password: bcrypt.hashSync('owner2026', 10),
         nombre: 'Roberto',
-        apellido: 'Dueño',
+        apellido: 'López',
         role: 'owner'
     }
 ];
@@ -69,8 +69,21 @@ const authenticateToken = (req, res, next) => {
 };
 
 // ============================================
-// RUTAS DE SALUD Y BIENVENIDA
+// RUTAS HTML
 // ============================================
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'cliente.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/cliente', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'cliente.html'));
+});
+
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'healthy', 
@@ -80,34 +93,13 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'healthy', 
-        timestamp: new Date().toISOString() 
-    });
-});
-
-app.get('/', (req, res) => {
-    res.json({
-        message: 'API Promoción Mundial 2026',
-        status: 'active',
-        version: '2.0.0',
-        endpoints: {
-            auth: '/api/auth/*',
-            cuotas: '/api/cuotas/*',
-            admin: '/api/admin/*'
-        }
-    });
-});
-
 // ============================================
 // AUTENTICACIÓN
 // ============================================
 
-// REGISTRO DE CLIENTE
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, password } = req.body;
+        const { nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, password, mesCuota2 } = req.body;
         
         if (!nombre || !apellido || !dni || !email || !password) {
             return res.status(400).json({ message: 'Faltan campos obligatorios' });
@@ -131,6 +123,7 @@ app.post('/api/auth/register', async (req, res) => {
             direccion: direccion || '',
             localidad: localidad || '',
             cp: cp || '',
+            mesCuota2: mesCuota2 || 'Octubre',
             password: hashedPassword,
             role: 'cliente',
             created_at: new Date().toISOString()
@@ -146,10 +139,7 @@ app.post('/api/auth/register', async (req, res) => {
         
         const { password: _, ...userResponse } = newUser;
         
-        res.json({
-            token,
-            user: userResponse
-        });
+        res.json({ token, user: userResponse });
         
     } catch (error) {
         console.error('Error en registro:', error);
@@ -157,7 +147,6 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// LOGIN UNIFICADO (Cliente y Admin)
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password, role } = req.body;
@@ -167,11 +156,9 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         let user = null;
-        let isAdmin = false;
 
         if (role && role !== 'cliente') {
             user = adminUsers.find(u => u.email === email && u.role === role);
-            isAdmin = true;
         } else {
             user = users.find(u => u.email === email);
         }
@@ -193,10 +180,7 @@ app.post('/api/auth/login', async (req, res) => {
         
         const { password: _, ...userResponse } = user;
         
-        res.json({
-            token,
-            user: userResponse
-        });
+        res.json({ token, user: userResponse });
         
     } catch (error) {
         console.error('Error en login:', error);
@@ -204,19 +188,65 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// VERIFICAR TOKEN
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
-    res.json({ 
-        valid: true,
-        user: req.user
-    });
+    res.json({ valid: true, user: req.user });
+});
+
+app.get('/api/auth/profile', authenticateToken, (req, res) => {
+    try {
+        let user;
+        if (req.user.role !== 'cliente') {
+            user = adminUsers.find(u => u.id === req.user.id);
+        } else {
+            user = users.find(u => u.id === req.user.id);
+        }
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        
+        const { password, ...userResponse } = user;
+        res.json(userResponse);
+        
+    } catch (error) {
+        console.error('Error obteniendo perfil:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+app.put('/api/auth/profile', authenticateToken, async (req, res) => {
+    try {
+        const { nombre, apellido, telefono, plan, direccion, localidad, cp, password } = req.body;
+        
+        const userIndex = users.findIndex(u => u.id === req.user.id);
+        if (userIndex === -1) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        
+        if (nombre) users[userIndex].nombre = nombre;
+        if (apellido) users[userIndex].apellido = apellido;
+        if (telefono) users[userIndex].telefono = telefono;
+        if (plan) users[userIndex].plan = plan;
+        if (direccion) users[userIndex].direccion = direccion;
+        if (localidad) users[userIndex].localidad = localidad;
+        if (cp) users[userIndex].cp = cp;
+        if (password) {
+            users[userIndex].password = await bcrypt.hash(password, 10);
+        }
+        
+        const { password: _, ...userResponse } = users[userIndex];
+        res.json(userResponse);
+        
+    } catch (error) {
+        console.error('Error actualizando perfil:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
 });
 
 // ============================================
-// RUTAS DE CUOTAS (CLIENTE)
+// CUOTAS (CLIENTE)
 // ============================================
 
-// OBTENER MIS CUOTAS
 app.get('/api/cuotas/mis-cuotas', authenticateToken, (req, res) => {
     try {
         const userCuotas = cuotas.filter(c => c.usuario_id === req.user.id);
@@ -227,10 +257,9 @@ app.get('/api/cuotas/mis-cuotas', authenticateToken, (req, res) => {
     }
 });
 
-// SUBIR COMPROBANTE (SIN MULTER - usando FormData del frontend)
 app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
     try {
-        const { numero, comprobante } = req.body;
+        const { numero, comprobante, nombreArchivo } = req.body;
         
         if (!comprobante || !numero) {
             return res.status(400).json({ message: 'Número de cuota y archivo requeridos' });
@@ -242,19 +271,17 @@ app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
         );
 
         if (existingCuota && existingCuota.estado === 'pendiente') {
-            return res.status(400).json({ message: 'Ya existe un comprobante pendiente para esta cuota' });
+            return res.status(400).json({ message: 'Ya existe un comprobante pendiente' });
         }
 
         if (existingCuota && existingCuota.estado === 'rechazado') {
             existingCuota.estado = 'pendiente';
             existingCuota.archivo = comprobante;
+            existingCuota.nombre_archivo = nombreArchivo || 'comprobante.pdf';
             existingCuota.fecha_subida = new Date().toISOString();
             existingCuota.motivo_rechazo = null;
             
-            return res.json({ 
-                message: 'Comprobante actualizado correctamente',
-                cuota: existingCuota
-            });
+            return res.json({ message: 'Comprobante actualizado', cuota: existingCuota });
         }
 
         const nuevaCuota = {
@@ -263,17 +290,12 @@ app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
             numero: parseInt(numero),
             estado: 'pendiente',
             archivo: comprobante,
-            fecha_subida: new Date().toISOString(),
-            motivo_rechazo: null,
-            fecha_validacion: null
+            nombre_archivo: nombreArchivo || 'comprobante.pdf',
+            fecha_subida: new Date().toISOString()
         };
 
         cuotas.push(nuevaCuota);
-        
-        res.json({ 
-            message: 'Comprobante subido correctamente',
-            cuota: nuevaCuota
-        });
+        res.json({ message: 'Comprobante subido', cuota: nuevaCuota });
         
     } catch (error) {
         console.error('Error subiendo comprobante:', error);
@@ -282,10 +304,9 @@ app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
 });
 
 // ============================================
-// RUTAS DE ADMINISTRACIÓN
+// ADMINISTRACIÓN
 // ============================================
 
-// OBTENER TODOS LOS CLIENTES
 app.get('/api/admin/clientes', authenticateToken, (req, res) => {
     try {
         if (req.user.role === 'cliente') {
@@ -306,30 +327,29 @@ app.get('/api/admin/clientes', authenticateToken, (req, res) => {
                 direccion: user.direccion,
                 localidad: user.localidad,
                 cp: user.cp,
+                mesCuota2: user.mesCuota2,
                 cuotasPendientes: userCuotas.filter(c => c.estado === 'pendiente').length,
                 cuotasValidadas: userCuotas.filter(c => c.estado === 'validado').length,
-                cuotasRechazadas: userCuotas.filter(c => c.estado === 'rechazado').length
+                cuotasRechazadas: userCuotas.filter(c => c.estado === 'rechazado').length,
+                created_at: user.created_at
             };
         });
 
         res.json(clientesConStats);
         
     } catch (error) {
-        console.error('Error obteniendo clientes:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Error interno' });
     }
 });
 
-// OBTENER CLIENTE POR ID
 app.get('/api/admin/clientes/:id', authenticateToken, (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const userId = parseInt(req.params.id);
-        const user = users.find(u => u.id === userId);
-        
+        const user = users.find(u => u.id === parseInt(req.params.id));
         if (!user) {
             return res.status(404).json({ message: 'Cliente no encontrado' });
         }
@@ -338,44 +358,36 @@ app.get('/api/admin/clientes/:id', authenticateToken, (req, res) => {
         res.json(userResponse);
         
     } catch (error) {
-        console.error('Error obteniendo cliente:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        res.status(500).json({ message: 'Error interno' });
     }
 });
 
-// OBTENER CUOTAS DE UN CLIENTE
 app.get('/api/admin/clientes/:id/cuotas', authenticateToken, (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const userId = parseInt(req.params.id);
-        const userCuotas = cuotas.filter(c => c.usuario_id === userId);
-        
+        const userCuotas = cuotas.filter(c => c.usuario_id === parseInt(req.params.id));
         res.json(userCuotas);
         
     } catch (error) {
-        console.error('Error obteniendo cuotas:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        res.status(500).json({ message: 'Error interno' });
     }
 });
 
-// VALIDAR O RECHAZAR CUOTA
 app.put('/api/admin/cuotas/:id/validar', authenticateToken, (req, res) => {
     try {
         if (req.user.role !== 'validator' && req.user.role !== 'owner') {
-            return res.status(403).json({ message: 'No tienes permisos para validar cuotas' });
+            return res.status(403).json({ message: 'Sin permisos' });
         }
 
-        const cuotaId = parseInt(req.params.id);
-        const { validar, motivo } = req.body;
-        
-        const cuota = cuotas.find(c => c.id === cuotaId);
-        
+        const cuota = cuotas.find(c => c.id === parseInt(req.params.id));
         if (!cuota) {
             return res.status(404).json({ message: 'Cuota no encontrada' });
         }
+
+        const { validar, motivo } = req.body;
 
         if (validar) {
             cuota.estado = 'validado';
@@ -384,99 +396,114 @@ app.put('/api/admin/cuotas/:id/validar', authenticateToken, (req, res) => {
         } else {
             cuota.estado = 'rechazado';
             cuota.motivo_rechazo = motivo || 'No especificado';
-            cuota.fecha_rechazo = new Date().toISOString();
             cuota.rechazado_por = req.user.email;
         }
         
-        res.json({ 
-            message: validar ? 'Cuota validada correctamente' : 'Cuota rechazada',
-            cuota
-        });
+        res.json({ message: validar ? 'Validada' : 'Rechazada', cuota });
         
     } catch (error) {
-        console.error('Error validando cuota:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        res.status(500).json({ message: 'Error interno' });
     }
 });
 
-// OBTENER ESTADÍSTICAS
 app.get('/api/admin/estadisticas', authenticateToken, (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const stats = {
+        res.json({
             totalClientes: users.length,
             totalCuotas: cuotas.length,
             cuotasPendientes: cuotas.filter(c => c.estado === 'pendiente').length,
             cuotasValidadas: cuotas.filter(c => c.estado === 'validado').length,
             cuotasRechazadas: cuotas.filter(c => c.estado === 'rechazado').length
-        };
-
-        res.json(stats);
+        });
         
     } catch (error) {
-        console.error('Error obteniendo estadísticas:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        res.status(500).json({ message: 'Error interno' });
     }
 });
 
-// RESETEAR DATOS (solo owner)
-app.post('/api/admin/reset-data', authenticateToken, (req, res) => {
+app.post('/api/admin/importar-clientes', authenticateToken, async (req, res) => {
     try {
-        if (req.user.role !== 'owner') {
-            return res.status(403).json({ message: 'Solo el dueño puede resetear datos' });
+        if (req.user.role !== 'owner' && req.user.role !== 'responsable') {
+            return res.status(403).json({ message: 'Sin permisos' });
         }
 
-        users = [];
-        cuotas = [];
-        nextUserId = 1;
-        nextCuotaId = 1;
-
-        res.json({ message: 'Datos reseteados correctamente' });
+        const { clientes } = req.body;
         
-    } catch (error) {
-        console.error('Error reseteando datos:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
-    }
-});
+        if (!Array.isArray(clientes) || clientes.length === 0) {
+            return res.status(400).json({ message: 'Array de clientes requerido' });
+        }
 
-// Manejo de errores
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ 
-        message: err.message || 'Error interno del servidor'
-    });
+        const importados = [];
+        const errores = [];
+
+        for (const clienteData of clientes) {
+            try {
+                if (!clienteData.nombre || !clienteData.apellido || !clienteData.dni || !clienteData.email) {
+                    errores.push({ cliente: clienteData, error: 'Faltan campos' });
+                    continue;
+                }
+
+                const existe = users.find(u => u.email === clienteData.email || u.dni === clienteData.dni);
+                if (existe) {
+                    errores.push({ cliente: clienteData, error: 'Ya existe' });
+                    continue;
+                }
+
+                const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
+                const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+                const nuevoCliente = {
+                    id: nextUserId++,
+                    ...clienteData,
+                    mesCuota2: clienteData.mesCuota2 || 'Octubre',
+                    password: hashedPassword,
+                    passwordTemporal: tempPassword,
+                    role: 'cliente',
+                    created_at: new Date().toISOString()
+                };
+
+                users.push(nuevoCliente);
+                const { password, ...clienteResponse } = nuevoCliente;
+                importados.push(clienteResponse);
+
+            } catch (error) {
+                errores.push({ cliente: clienteData, error: error.message });
+            }
+        }
+
+        res.json({
+            message: `${importados.length} importados, ${errores.length} errores`,
+            importados,
+            errores
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error interno' });
+    }
 });
 
 // 404
 app.use((req, res) => {
-    res.status(404).json({ 
-        message: 'Ruta no encontrada',
-        path: req.path
-    });
+    res.status(404).json({ message: 'Ruta no encontrada' });
 });
 
-// Iniciar servidor
+// Iniciar
 app.listen(PORT, () => {
     console.log('\n===========================================');
-    console.log('🏆 PROMOCIÓN MUNDIAL 2026 - API ACTIVA');
+    console.log('PROMOCION MUNDIAL 2026 - ACTIVO');
     console.log('===========================================');
-    console.log(`\n🌐 Puerto: ${PORT}`);
-    console.log(`📅 ${new Date().toLocaleString('es-AR')}`);
-    console.log('\n🔐 CREDENCIALES ADMIN:');
-    console.log('\n👤 VALIDADOR:');
-    console.log('   Email: validator@mundial2026.com');
-    console.log('   Pass: validator2026');
-    console.log('\n👤 RESPONSABLE:');
-    console.log('   Email: responsable@mundial2026.com');
-    console.log('   Pass: responsable2026');
-    console.log('\n👤 DUEÑO:');
-    console.log('   Email: owner@mundial2026.com');
-    console.log('   Pass: owner2026');
-    console.log('\n===========================================');
-    console.log('✅ Sistema listo');
+    console.log(`Puerto: ${PORT}`);
+    console.log('\nCREDENCIALES ADMIN:');
+    console.log('validator@mundial2026.com / validator2026');
+    console.log('responsable@mundial2026.com / responsable2026');
+    console.log('owner@mundial2026.com / owner2026');
+    console.log('\nRUTAS:');
+    console.log('/ -> Panel Cliente');
+    console.log('/admin -> Panel Administracion');
     console.log('===========================================\n');
 });
 

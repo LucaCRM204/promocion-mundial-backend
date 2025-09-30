@@ -1,0 +1,3423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Promoción Mundial 2026</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .auth-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .role-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .role-btn {
+            padding: 15px 30px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .role-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .role-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input {
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .admin-panel {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-width: 250px;
+        }
+
+        .clients-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .status-validated {
+            background: #00b894;
+            color: white;
+        }
+
+        .status-rejected {
+            background: #e17055;
+            color: white;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .validate-btn {
+            background: #00b894;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #e17055;
+            color: white;
+        }
+
+        .view-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #999;
+        }
+
+        .client-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .cuotas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .cuota-card {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+        }
+
+        .cuota-card.pending {
+            border-color: #ffeaa7;
+            background: #fdfcf0;
+        }
+
+        .cuota-card.validated {
+            border-color: #00b894;
+            background: #f0fdf4;
+        }
+
+        .cuota-card.overdue {
+            border-color: #e74c3c;
+            background: #ffeaea;
+        }
+
+        .cuota-card.late {
+            border-color: #f39c12;
+            background: #fef9e7;
+        }
+
+        .cuota-card.ontime {
+            border-color: #27ae60;
+            background: #eafaf1;
+        }
+
+        .due-date {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .due-date.overdue {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .due-date.late {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .due-date.ontime {
+            color: #27ae60;
+        }
+
+        .status-overdue {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-late {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-ready-delivery {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-dispatched {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .cuota-card.ready-delivery {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .cuota-card.dispatched {
+            border-color: #9b59b6;
+            background: #f3e5f5;
+        }
+
+        .delivery-panel {
+            background: #e3f2fd;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .dispatch-panel {
+            background: #f3e5f5;
+            border: 2px solid #9b59b6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .delivery-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .large-delivery-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            background: #3498db;
+            color: white;
+        }
+
+        .large-dispatch-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            background: #9b59b6;
+            color: white;
+        }
+
+        .tracking-info {
+            background: white;
+            border-left: 4px solid #9b59b6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .cuota-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .cuota-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .file-preview {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .file-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .file-preview .pdf-placeholder {
+            background: #e74c3c;
+            color: white;
+            padding: 40px;
+            border-radius: 8px;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .download-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .validation-panel {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .validation-panel.pending {
+            border-color: #f39c12;
+            background: #fef9e7;
+        }
+
+        .validation-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .large-action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .large-validate-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .large-reject-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .large-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-indicator.syncing {
+            background: #f39c12;
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .validation-history {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .validation-history.rejected {
+            background: #fdeaea;
+            border-left-color: #e74c3c;
+        }
+
+        .timestamp {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .demo-btn {
+            background: #2ed573;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .owner-actions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .owner-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .report-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .settings-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .alert-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .owner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+            
+            .cuotas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Panel de Administración - Promoción Mundial 2026</h1>
+            <p>Sistema de gestión y validación de cuotas</p>
+        </div>
+
+        <!-- Sección de Autenticación -->
+        <div class="auth-section" id="authSection">
+            <h2>Iniciar Sesión</h2>
+            
+            <div class="role-selector">
+                <button class="role-btn active" onclick="selectRole('validator')">Validador</button>
+                <button class="role-btn" onclick="selectRole('responsable')">Responsable</button>
+                <button class="role-btn" onclick="selectRole('owner')">Dueño</button>
+            </div>
+
+            <form class="login-form" onsubmit="login(event)">
+                <div class="input-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="login-btn">Iniciar Sesión</button>
+                
+                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h4 style="margin: 0 0 10px 0; color: #667eea;">Usuarios Demo Disponibles:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div>
+                            <button type="button" class="demo-btn" onclick="demoValidatorLogin()" style="width: 100%; margin-bottom: 8px;">
+                                🔍 Demo Validador
+                            </button>
+                            <small style="color: #666; font-size: 0.8rem;">
+                                Solo validación de comprobantes
+                            </small>
+                        </div>
+                        <div>
+                            <button type="button" class="demo-btn" onclick="demoResponsableLogin()" style="width: 100%; margin-bottom: 8px; background: #3498db;">
+                                📋 Demo Responsable
+                            </button>
+                            <small style="color: #666; font-size: 0.8rem;">
+                                Gestión de entregas + Excel
+                            </small>
+                        </div>
+                        <div>
+                            <button type="button" class="demo-btn" onclick="demoDuenoLogin()" style="width: 100%; margin-bottom: 8px; background: #e67e22;">
+                                👑 Demo Dueño
+                            </button>
+                            <small style="color: #666; font-size: 0.8rem;">
+                                Control total del sistema
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel de Administración -->
+        <div class="admin-panel" id="adminPanel">
+            <div class="panel-header">
+                <div class="user-info">
+                    <h2 id="welcomeMsg">Bienvenido</h2>
+                    <span id="userRole" class="status-badge status-validated"></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Las estadísticas se cargarán dinámicamente -->
+            </div>
+
+            <!-- Acciones del Dueño -->
+            <div class="owner-actions" id="ownerActions" style="display: none;">
+                <h3>Acciones Administrativas</h3>
+                <div class="action-grid">
+                    <button class="owner-btn" onclick="openImportModal()" style="background: #e67e22;">
+                        📥 Importar Excel
+                    </button>
+                    <button class="owner-btn export-btn" onclick="exportData()">
+                        📊 Exportar Todo
+                    </button>
+                    <button class="owner-btn export-btn" onclick="exportPendingOnly()">
+                        ⏳ Solo Pendientes
+                    </button>
+                    <button class="owner-btn report-btn" onclick="generateReport()">
+                        📋 Generar Reporte
+                    </button>
+                    <button class="owner-btn settings-btn" onclick="openSettings()">
+                        ⚙️ Configuración
+                    </button>
+                    <button class="owner-btn alert-btn" onclick="sendAlerts()">
+                        📧 Enviar Alertas
+                    </button>
+                    <button class="owner-btn" onclick="massValidate()" style="background: #f39c12;">
+                        ⚡ Validación Masiva
+                    </button>
+                    <button class="owner-btn" onclick="showDetailedStats()" style="background: #9b59b6;">
+                        📈 Estadísticas
+                    </button>
+                    <button class="owner-btn" onclick="showKeyboardHelp()" style="background: #3498db;">
+                        ⌨️ Atajos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters">
+                <select class="filter-select" id="statusFilter" onchange="filterData()">
+                    <option value="">Todos los estados</option>
+                    <option value="pending">Pendientes</option>
+                    <option value="ready-delivery">Listos Entrega</option>
+                    <option value="dispatched">Despachados</option>
+                    <option value="delivered">Entregados</option>
+                    <option value="rejected">Rechazados</option>
+                </select>
+                
+                <select class="filter-select" id="cuotaFilter" onchange="filterData()">
+                    <option value="">Todas las cuotas</option>
+                    <option value="2">Cuota 2</option>
+                    <option value="3">Cuota 3</option>
+                    <option value="4">Cuota 4</option>
+                    <option value="5">Cuota 5</option>
+                    <option value="6">Cuota 6</option>
+                    <option value="7">Cuota 7</option>
+                    <option value="8">Cuota 8</option>
+                    <option value="9">Cuota 9</option>
+                    <option value="10">Cuota 10</option>
+                    <option value="11">Cuota 11</option>
+                    <option value="12">Cuota 12</option>
+                </select>
+
+                <select class="filter-select" id="monthFilter" onchange="filterData()">
+                    <option value="">Todos los meses</option>
+                    <option value="Octubre">Octubre</option>
+                    <option value="Noviembre">Noviembre</option>
+                    <option value="Diciembre">Diciembre</option>
+                    <option value="Enero">Enero</option>
+                    <option value="Febrero">Febrero</option>
+                    <option value="Marzo">Marzo</option>
+                    <option value="Abril">Abril</option>
+                    <option value="Mayo">Mayo</option>
+                    <option value="Junio">Junio</option>
+                    <option value="Julio">Julio</option>
+                    <option value="Agosto">Agosto</option>
+                </select>
+
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, DNI, email..." onkeyup="filterData()">
+                
+                <button class="action-btn view-btn" onclick="refreshData()">🔄 Actualizar</button>
+                <button class="action-btn validate-btn" onclick="showOnlyPending()">⏳ Pendientes</button>
+                <button class="action-btn reject-btn" onclick="clearFilters()">🗑️ Limpiar</button>
+            </div>
+
+            <!-- Tabla de Clientes -->
+            <div class="clients-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Cliente</th>
+                            <th style="width: 10%;">DNI</th>
+                            <th style="width: 20%;">Email</th>
+                            <th style="width: 15%;">Plan</th>
+                            <th style="width: 10%;">Pend.</th>
+                            <th style="width: 10%;">Valid.</th>
+                            <th style="width: 20%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="pagination" id="pagination">
+                <!-- Los botones de paginación se generarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles del cliente -->
+    <div class="modal" id="clientModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2>Detalles del Cliente</h2>
+            
+            <div class="client-details" id="clientDetails">
+                <!-- Los detalles se cargarán dinámicamente -->
+            </div>
+
+            <h3>Estado de Cuotas</h3>
+            <div class="cuotas-grid" id="cuotasGrid">
+                <!-- Las cuotas se cargarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para importar Excel -->
+    <div class="modal" id="importModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <button class="close-modal" onclick="closeImportModal()">&times;</button>
+            <h2>📥 Importar Clientes desde Excel</h2>
+            
+            <div style="margin: 20px 0; padding: 20px; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #27ae60;">
+                <h3>📋 Formato Requerido del Excel:</h3>
+                <p><strong>Columnas obligatorias (en este orden):</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>A:</strong> Nombre</li>
+                    <li><strong>B:</strong> Apellido</li>
+                    <li><strong>C:</strong> DNI</li>
+                    <li><strong>D:</strong> Email</li>
+                    <li><strong>E:</strong> Teléfono</li>
+                    <li><strong>F:</strong> Plan</li>
+                    <li><strong>G:</strong> Dirección</li>
+                    <li><strong>H:</strong> Localidad</li>
+                    <li><strong>I:</strong> Código Postal</li>
+                    <li><strong>J:</strong> Mes Cuota 2 (Octubre, Noviembre, etc.)</li>
+                </ul>
+                <button class="download-btn" onclick="downloadTemplate()">
+                    📄 Descargar Plantilla Excel
+                </button>
+            </div>
+
+            <div style="margin: 30px 0;">
+                <h3>Seleccionar archivo Excel:</h3>
+                <input type="file" id="excelFile" accept=".xlsx,.xls" style="margin: 10px 0; padding: 10px; border: 2px dashed #ddd; border-radius: 8px; width: 100%;">
+                
+                <div style="margin: 20px 0;">
+                    <button class="action-btn validate-btn" onclick="processExcel()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        🔄 Procesar Excel
+                    </button>
+                </div>
+            </div>
+
+            <div id="importPreview" style="display: none;">
+                <h3>Vista Previa de Importación:</h3>
+                <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0;">
+                    <table style="width: 100%; font-size: 0.9rem;">
+                        <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                            <tr>
+                                <th style="padding: 8px;">Nombre</th>
+                                <th style="padding: 8px;">Apellido</th>
+                                <th style="padding: 8px;">DNI</th>
+                                <th style="padding: 8px;">Email</th>
+                                <th style="padding: 8px;">Plan</th>
+                                <th style="padding: 8px;">Mes Cuota 2</th>
+                                <th style="padding: 8px;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                            <!-- Datos de vista previa -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin: 20px 0; text-align: center;">
+                    <button class="action-btn validate-btn" onclick="confirmImport()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        ✅ Confirmar Importación
+                    </button>
+                    <button class="action-btn reject-btn" onclick="cancelImport()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <div id="importResults" style="display: none;">
+                <h3>Resultados de la Importación:</h3>
+                <div id="importSummary" style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 10px 0;">
+                    <!-- Resumen de importación -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let currentRole = 'validator';
+        let clientsData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        const cuotaDueDates = {
+            2: { month: 'Octubre', day: 25, year: 2024 },
+            3: { month: 'Noviembre', day: 25, year: 2024 },
+            4: { month: 'Diciembre', day: 25, year: 2024 },
+            5: { month: 'Enero', day: 25, year: 2025 },
+            6: { month: 'Febrero', day: 25, year: 2025 },
+            7: { month: 'Marzo', day: 25, year: 2025 },
+            8: { month: 'Abril', day: 25, year: 2025 },
+            9: { month: 'Mayo', day: 25, year: 2025 },
+            10: { month: 'Junio', day: 25, year: 2025 },
+            11: { month: 'Julio', day: 25, year: 2025 },
+            12: { month: 'Agosto', day: 25, year: 2025 }
+        };
+
+        function getCuotaDueDate(cuotaNumber) {
+            const due = cuotaDueDates[cuotaNumber];
+            if (!due) return 'No definida';
+            return `${due.day}/${due.month.substring(0,3)}/${due.year}`;
+        }
+
+        function getCuotaStatus(cuotaNumber, uploadDate = null) {
+            const due = cuotaDueDates[cuotaNumber];
+            if (!due) return 'normal';
+            
+            const dueDate = new Date(due.year, getMonthNumber(due.month) - 1, due.day);
+            const today = new Date();
+            const upload = uploadDate ? new Date(uploadDate) : null;
+            
+            if (upload && upload > dueDate) {
+                return 'late'; // Subido después del vencimiento
+            } else if (today > dueDate && !upload) {
+                return 'overdue'; // Vencida y no subida
+            } else if (today <= dueDate) {
+                return 'ontime'; // A tiempo
+            }
+            return 'normal';
+        }
+
+        function getMonthNumber(monthName) {
+            const months = {
+                'Enero': 1, 'Febrero': 2, 'Marzo': 3, 'Abril': 4,
+                'Mayo': 5, 'Junio': 6, 'Julio': 7, 'Agosto': 8,
+                'Septiembre': 9, 'Octubre': 10, 'Noviembre': 11, 'Diciembre': 12
+            };
+            return months[monthName] || 1;
+        }
+
+        // Usuarios del sistema
+        const systemUsers = {
+            'validator1': { password: 'val123', role: 'validator', name: 'María González' },
+            'validator2': { password: 'val456', role: 'validator', name: 'Carlos Pérez' },
+            'responsable1': { password: 'resp123', role: 'responsable', name: 'Ana García' },
+            'responsable2': { password: 'resp456', role: 'responsable', name: 'Luis Martín' },
+            'owner': { password: 'admin123', role: 'owner', name: 'Roberto López' },
+            'demo': { password: 'demo', role: 'owner', name: 'Usuario Demo' }
+        };
+
+        // Datos de ejemplo de clientes (simulando archivos reales)
+        const mockClientsData = [
+            {
+                id: 1,
+                nombre: 'Juan Carlos',
+                apellido: 'Pérez',
+                dni: '12345678',
+                email: 'juan.perez@email.com',
+                telefono: '11-1234-5678',
+                plan: 'Corolla 2024 - Plan Premium',
+                direccion: 'Av. Corrientes 1234',
+                localidad: 'Buenos Aires',
+                cp: '1000',
+                registrationDate: '2024-01-15',
+                mesCuota2: 'Octubre', // Mes definido para cuota 2
+                cuotas: {
+                    2: { 
+                        status: 'dispatched', 
+                        file: 'comprobante_cuota2.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample', 
+                        uploadDate: '2024-10-20', 
+                        validatedBy: 'María González', 
+                        validationDate: '2024-10-21',
+                        dispatchedBy: 'Roberto López',
+                        dispatchDate: '2024-10-25',
+                        trackingNumber: 'TR12345678',
+                        carrier: 'Correo Argentino',
+                        estimatedDays: '3-5'
+                    },
+                    3: { 
+                        status: 'pending', 
+                        file: 'comprobante_cuota3.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/74b9ff/ffffff?text=COMPROBANTE+CUOTA+3',
+                        uploadDate: '2024-11-28' 
+                    },
+                    4: { 
+                        status: 'rejected', 
+                        file: 'comprobante_cuota4.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample',
+                        uploadDate: '2024-12-05', 
+                        rejectedBy: 'Carlos Pérez', 
+                        rejectionDate: '2024-12-06', 
+                        reason: 'Documento ilegible' 
+                    },
+                    5: { 
+                        status: 'pending', 
+                        file: 'cuota5_enero.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/f39c12/ffffff?text=CUOTA+ENERO+PENDIENTE',
+                        uploadDate: '2025-01-30' 
+                    }
+                }
+            },
+            {
+                id: 2,
+                nombre: 'Ana María',
+                apellido: 'González',
+                dni: '87654321',
+                email: 'ana.gonzalez@email.com',
+                telefono: '11-8765-4321',
+                plan: 'Civic 2024 - Plan Estándar',
+                direccion: 'Av. Santa Fe 5678',
+                localidad: 'Buenos Aires',
+                cp: '1425',
+                registrationDate: '2024-01-20',
+                mesCuota2: 'Noviembre', // Mes definido para cuota 2
+                cuotas: {
+                    2: { 
+                        status: 'validated', 
+                        file: 'comp_2.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample',
+                        uploadDate: '2024-02-20', 
+                        validatedBy: 'María González', 
+                        validationDate: '2024-02-21' 
+                    },
+                    3: { 
+                        status: 'validated', 
+                        file: 'comp_3.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/27ae60/ffffff?text=COMPROBANTE+VALIDADO',
+                        uploadDate: '2024-03-15', 
+                        validatedBy: 'Carlos Pérez', 
+                        validationDate: '2024-03-16' 
+                    },
+                    4: { 
+                        status: 'pending', 
+                        file: 'comp_4.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample',
+                        uploadDate: '2024-04-12' 
+                    },
+                    5: { 
+                        status: 'pending', 
+                        file: 'comp_5.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/f39c12/ffffff?text=COMPROBANTE+PENDIENTE',
+                        uploadDate: '2024-05-08' 
+                    }
+                }
+            },
+            {
+                id: 3,
+                nombre: 'Roberto',
+                apellido: 'Martínez',
+                dni: '11223344',
+                email: 'roberto.martinez@email.com',
+                telefono: '11-2233-4455',
+                plan: 'Camry 2024 - Plan Premium',
+                direccion: 'Av. Rivadavia 9876',
+                localidad: 'CABA',
+                cp: '1200',
+                registrationDate: '2024-02-01',
+                mesCuota2: 'Diciembre', // Mes definido para cuota 2
+                cuotas: {
+                    2: { 
+                        status: 'validated', 
+                        file: 'cuota2_roberto.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample',
+                        uploadDate: '2024-11-20', 
+                        validatedBy: 'María González', 
+                        validationDate: '2024-11-21' 
+                    },
+                    3: { 
+                        status: 'pending', 
+                        file: 'cuota3_roberto.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/74b9ff/ffffff?text=COMPROBANTE+BANCO+NACIÓN',
+                        uploadDate: '2024-12-20' 
+                    }
+                }
+            },
+            {
+                id: 4,
+                nombre: 'María Elena',
+                apellido: 'Rodriguez',
+                dni: '98765432',
+                email: 'maria.rodriguez@email.com',
+                telefono: '11-9876-5432',
+                plan: 'Sentra 2024 - Plan Básico',
+                direccion: 'Calle Falsa 123',
+                localidad: 'Quilmes',
+                cp: '1878',
+                registrationDate: '2024-03-15',
+                mesCuota2: 'Enero', // Mes definido para cuota 2
+                cuotas: {
+                    2: { 
+                        status: 'validated', 
+                        file: 'maria_cuota2.pdf', 
+                        fileType: 'pdf',
+                        fileUrl: 'data:application/pdf;base64,sample',
+                        uploadDate: '2024-12-22', 
+                        validatedBy: 'Carlos Pérez', 
+                        validationDate: '2024-12-23' 
+                    },
+                    3: { 
+                        status: 'pending', 
+                        file: 'maria_cuota3.jpg', 
+                        fileType: 'image',
+                        fileUrl: 'https://via.placeholder.com/600x400/e74c3c/ffffff?text=ENERO+PENDIENTE',
+                        uploadDate: '2025-01-20' 
+                    }
+                }
+            }
+        ];
+
+        function selectRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function login(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const user = systemUsers[username];
+            if (!user || user.password !== password) {
+                alert('Usuario o contraseña incorrectos');
+                return;
+            }
+            
+            if (user.role !== currentRole) {
+                alert(`Este usuario no tiene permisos de ${currentRole}`);
+                return;
+            }
+            
+            currentUser = { username, ...user };
+            showAdminPanel();
+        }
+
+        function demoValidatorLogin() {
+            // Crear o usar usuario demo validador
+            currentUser = { 
+                username: 'demo-validador', 
+                name: 'María Demo', 
+                role: 'validator' 
+            };
+            currentRole = 'validator';
+            
+            // Marcar el rol correcto
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.role-btn')[0].classList.add('active'); // Primer botón es "Validador"
+            
+            console.log('Demo Validador login:', currentUser); // Debug
+            showAdminPanel();
+        }
+
+        function demoResponsableLogin() {
+            // Forzar el rol y usuario de responsable
+            currentRole = 'responsable';
+            currentUser = { 
+                username: 'demo-responsable', 
+                name: 'Ana Demo', 
+                role: 'responsable'
+            };
+            
+            // Ocultar sección de login
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            
+            // Configurar específicamente para responsable
+            setupResponsablePanel();
+            
+            // Cargar datos
+            loadClientsData();
+            updateStats();
+        }
+
+        function setupResponsablePanel() {
+            // Configurar header
+            const headerTitle = document.querySelector('.header h1');
+            const headerSubtitle = document.querySelector('.header p');
+            headerTitle.textContent = '📋 Panel del Responsable - Promoción Mundial 2026';
+            headerSubtitle.textContent = 'Gestión de entregas, importación y administración operativa';
+            
+            // Configurar bienvenida y rol
+            document.getElementById('welcomeMsg').textContent = `Bienvenido/a ${currentUser.name} - Panel del Responsable`;
+            document.getElementById('userRole').textContent = 'Responsable de Gestión';
+            document.getElementById('userRole').className = 'status-badge status-ready-delivery';
+            
+            // Mostrar panel de acciones administrativas
+            document.getElementById('ownerActions').style.display = 'block';
+            
+            // Configurar botones específicos del responsable
+            const ownerActionsDiv = document.getElementById('ownerActions');
+            ownerActionsDiv.querySelector('h3').textContent = 'Acciones del Responsable';
+            
+            const actionGrid = ownerActionsDiv.querySelector('.action-grid');
+            actionGrid.innerHTML = `
+                <button class="owner-btn" onclick="openImportModal()" style="background: #e67e22;">
+                    📥 Importar Excel
+                </button>
+                <button class="owner-btn report-btn" onclick="generateReport()">
+                    📋 Generar Reporte
+                </button>
+                <button class="owner-btn alert-btn" onclick="sendAlerts()">
+                    📧 Enviar Alertas
+                </button>
+                <button class="owner-btn" onclick="showDetailedStats()" style="background: #9b59b6;">
+                    📈 Estadísticas
+                </button>
+            `;
+            
+            // Configurar filtros específicos del responsable
+            const statusFilter = document.getElementById('statusFilter');
+            statusFilter.innerHTML = `
+                <option value="">Todos los estados</option>
+                <option value="ready-delivery">Listos para Entrega</option>
+                <option value="dispatched">Despachados</option>
+                <option value="delivered">Entregados</option>
+                <option value="pending">Pendientes (referencia)</option>
+                <option value="rejected">Rechazados (referencia)</option>
+            `;
+            
+            // Marcar el botón de rol correcto
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.role-btn')[1].classList.add('active');
+        }
+
+        function demoDuenoLogin() {
+            // Crear o usar usuario demo dueño
+            currentUser = { 
+                username: 'demo-dueno', 
+                name: 'Carlos Demo', 
+                role: 'owner' 
+            };
+            currentRole = 'owner';
+            
+            // Marcar el rol correcto
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.role-btn')[2].classList.add('active'); // Tercer botón es "Dueño"
+            
+            console.log('Demo Dueño login:', currentUser); // Debug
+            showAdminPanel();
+        }
+
+        // Mantener la función original para compatibilidad
+        function demoLogin() {
+            demoDuenoLogin();
+        }
+
+        function showAdminPanel() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            
+            // Obtener elementos del header
+            const headerTitle = document.querySelector('.header h1');
+            const headerSubtitle = document.querySelector('.header p');
+            
+            // Personalizar según el rol
+            if (currentUser.role === 'owner') {
+                document.getElementById('welcomeMsg').textContent = `Bienvenido/a ${currentUser.name} - Panel del Dueño`;
+                document.getElementById('userRole').textContent = 'Administrador Principal';
+                document.getElementById('userRole').className = 'status-badge status-validated';
+                document.getElementById('ownerActions').style.display = 'block';
+                
+                // Cambiar título de la página para dueño
+                headerTitle.textContent = '👑 Panel del Dueño - Promoción Mundial 2026';
+                headerSubtitle.textContent = 'Gestión completa: validación, entrega y administración';
+                
+                // El dueño ve TODOS los estados (filtros completos)
+                updateOwnerFilters();
+                
+            } else if (currentUser.role === 'validator') {
+                document.getElementById('welcomeMsg').textContent = `Bienvenido/a ${currentUser.name} - Panel del Validador`;
+                document.getElementById('userRole').textContent = 'Validador de Cuotas';
+                document.getElementById('userRole').className = 'status-badge status-pending';
+                document.getElementById('ownerActions').style.display = 'none';
+                
+                // Cambiar título de la página para validador
+                headerTitle.textContent = '🔍 Panel del Validador - Promoción Mundial 2026';
+                headerSubtitle.textContent = 'Revisión y validación de comprobantes de pago';
+                
+                // Actualizar filtros solo para validador
+                updateValidatorFilters();
+            }
+            
+            loadClientsData();
+            updateStats();
+        }
+
+        function updateOwnerFilters() {
+            // El dueño ve TODOS los estados posibles
+            const statusFilter = document.getElementById('statusFilter');
+            statusFilter.innerHTML = `
+                <option value="">Todos los estados</option>
+                <option value="pending">Pendientes Validación</option>
+                <option value="ready-delivery">Listos para Entrega</option>
+                <option value="dispatched">Despachados</option>
+                <option value="delivered">Entregados</option>
+                <option value="rejected">Rechazados</option>
+            `;
+        }
+
+        function updateValidatorFilters() {
+            const statusFilter = document.getElementById('statusFilter');
+            statusFilter.innerHTML = `
+                <option value="">Todos los estados</option>
+                <option value="pending">Pendientes Validación</option>
+                <option value="ready-delivery">Validados</option>
+                <option value="rejected">Rechazados</option>
+            `;
+        }
+
+        function logout() {
+            currentUser = null;
+            
+            // Resetear interfaz
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('authSection').style.display = 'block';
+            
+            // Resetear título original
+            const headerTitle = document.querySelector('.header h1');
+            const headerSubtitle = document.querySelector('.header p');
+            headerTitle.textContent = '🏆 Panel de Administración - Promoción Mundial 2026';
+            headerSubtitle.textContent = 'Sistema de gestión y validación de cuotas';
+            
+            // Limpiar formularios
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            // Resetear selección de rol
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.role-btn').classList.add('active');
+            currentRole = 'validator';
+        }
+
+        function loadClientsData() {
+            // En una aplicación real, esto vendría de una API
+            clientsData = [...mockClientsData];
+            filteredData = [...clientsData];
+            renderTable();
+        }
+
+        function updateStats() {
+            const totalClients = clientsData.length;
+            let totalPending = 0;
+            let totalValidated = 0;
+            let totalRejected = 0;
+            let totalReadyDelivery = 0;
+            let totalDispatched = 0;
+            let totalDelivered = 0;
+            
+            clientsData.forEach(client => {
+                Object.values(client.cuotas).forEach(cuota => {
+                    switch(cuota.status) {
+                        case 'pending': totalPending++; break;
+                        case 'ready-delivery': totalReadyDelivery++; break;
+                        case 'dispatched': totalDispatched++; break;
+                        case 'delivered': totalDelivered++; break;
+                        case 'rejected': totalRejected++; break;
+                    }
+                });
+            });
+            
+            let statsHtml = '';
+            
+            if (currentUser.role === 'validator') {
+                // Estadísticas enfocadas en validación
+                statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalClients}</div>
+                        <div class="stat-label">Total Clientes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                        <div class="stat-number">${totalPending}</div>
+                        <div class="stat-label">Pendientes Validación</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+                        <div class="stat-number">${totalReadyDelivery}</div>
+                        <div class="stat-label">Validados</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                        <div class="stat-number">${totalRejected}</div>
+                        <div class="stat-label">Rechazados</div>
+                    </div>
+                `;
+            } else if (currentUser.role === 'responsable') {
+                // Estadísticas enfocadas en gestión post-validación
+                statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalClients}</div>
+                        <div class="stat-label">Total Clientes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                        <div class="stat-number">${totalReadyDelivery}</div>
+                        <div class="stat-label">Listos Entrega</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
+                        <div class="stat-number">${totalDispatched}</div>
+                        <div class="stat-label">Despachados</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">
+                        <div class="stat-number">${totalDelivered}</div>
+                        <div class="stat-label">Entregados</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                        <div class="stat-number">${totalPending}</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                `;
+            } else {
+                // Estadísticas completas para el dueño
+                statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalClients}</div>
+                        <div class="stat-label">Total Clientes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                        <div class="stat-number">${totalPending}</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                        <div class="stat-number">${totalReadyDelivery}</div>
+                        <div class="stat-label">Listos Entrega</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
+                        <div class="stat-number">${totalDispatched}</div>
+                        <div class="stat-label">Despachados</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">
+                        <div class="stat-number">${totalDelivered}</div>
+                        <div class="stat-label">Entregados</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                        <div class="stat-number">${totalRejected}</div>
+                        <div class="stat-label">Rechazadas</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+
+        function resendTrackingEmail(clientId, cuotaNumber) {
+            const client = clientsData.find(c => c.id === clientId);
+            const cuota = client.cuotas[cuotaNumber];
+            
+            sendTrackingEmail(client, cuotaNumber, cuota.trackingNumber, cuota.carrier, cuota.estimatedDays);
+            alert(`📧 Email de seguimiento reenviado a ${client.nombre} ${client.apellido}`);
+        }
+
+        function markAsDelivered(clientId, cuotaNumber) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client || !client.cuotas[cuotaNumber]) return;
+            
+            const confirmed = confirm('¿Confirmas que el premio fue entregado exitosamente al cliente?');
+            if (!confirmed) return;
+            
+            showSyncIndicator();
+            
+            client.cuotas[cuotaNumber].status = 'delivered';
+            client.cuotas[cuotaNumber].deliveredBy = currentUser.name;
+            client.cuotas[cuotaNumber].deliveryDate = new Date().toISOString().split('T')[0];
+            
+            // Enviar email de confirmación de entrega
+            sendDeliveryConfirmationEmail(client, cuotaNumber);
+            
+            alert(`🏆 Premio marcado como ENTREGADO.\n\n📧 Se ha enviado email de confirmación a ${client.nombre} ${client.apellido}.`);
+            
+            setTimeout(() => {
+                hideSyncIndicator();
+                viewClient(clientId);
+                updateStats();
+                renderTable();
+            }, 1500);
+        }
+
+        function sendDeliveryConfirmationEmail(client, cuotaNumber) {
+            const prizes = {
+                2: '🧢 Gorra Mundial 2026',
+                3: '⚽ Pelota de fútbol Alra Mundial',
+                4: '💰 Voucher $1.000.000',
+                5: '👕 Camiseta Argentina Mundial 2026',
+                6: '🚗 Polarizado',
+                7: '🇦🇷 Bandera Argentina Mundial 2026',
+                8: '⛽ Tanque lleno de nafta',
+                9: '🏖️ Voucher vacacional',
+                10: '🎁 Premio sorpresa',
+                11: '🏆 Premio especial',
+                12: '🎉 Gran premio final'
+            };
+            
+            const emailContent = `
+¡FELICITACIONES ${client.nombre.toUpperCase()} ${client.apellido.toUpperCase()}! 🎉
+
+🏆 ¡PREMIO ENTREGADO EXITOSAMENTE! 🏆
+
+Confirmamos que has recibido tu premio de la Cuota ${cuotaNumber}:
+
+🎁 PREMIO RECIBIDO:
+${prizes[cuotaNumber]}
+
+📦 CONFIRMACIÓN DE ENTREGA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Fecha de entrega: ${new Date().toLocaleDateString('es-AR')}
+📍 Entregado en: ${client.direccion}, ${client.localidad}
+✅ Estado: ENTREGADO EXITOSAMENTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ¡SIGUE PARTICIPANDO!
+Este es solo el comienzo. Mantén tus cuotas al día para seguir ganando increíbles premios hasta la Cuota 12.
+
+🏆 PRÓXIMOS PREMIOS DISPONIBLES:
+• Cuota ${cuotaNumber + 1}: ${prizes[cuotaNumber + 1] || '🎁 Premio especial'}
+• Y muchos más hasta el gran premio final!
+
+📱 COMPARTE TU EXPERIENCIA:
+¿Te gustó tu premio? ¡Comparte una foto en redes sociales!
+Etiquétanos: @PromocionMundial2026
+
+🤝 AGRADECIMIENTO:
+Gracias por ser parte de la Promoción Mundial 2026. Tu puntualidad en los pagos te ha permitido disfrutar de este premio.
+
+¡Nos vemos en el próximo premio! 🇦🇷
+
+Equipo Promoción Mundial 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            `;
+            
+            console.log('📧 EMAIL DE CONFIRMACIÓN DE ENTREGA ENVIADO:');
+            console.log('Para:', client.email);
+            console.log('Asunto: 🏆 ¡Premio entregado exitosamente! - Promoción Mundial 2026');
+            console.log('Contenido:');
+            console.log(emailContent);
+            console.log('---');
+        }
+
+        // Función mejorada para obtener el mes de vencimiento de un cliente específico
+        function getClientCuotaDueDate(client, cuotaNumber) {
+            // Si el cliente tiene definido el mes de cuota 2, usar ese como base
+            if (client.mesCuota2) {
+                const baseMonth = getMonthNumber(client.mesCuota2);
+                const targetMonth = ((baseMonth - 1 + (cuotaNumber - 2)) % 12) + 1;
+                const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                
+                // Calcular año basado en si el mes es menor que el mes base
+                let year = 2024;
+                if (client.mesCuota2 === 'Enero' || client.mesCuota2 === 'Febrero' || client.mesCuota2 === 'Marzo') {
+                    year = 2025;
+                } else if (targetMonth < baseMonth && baseMonth >= 10) {
+                    year = 2025;
+                }
+                
+                return {
+                    month: monthNames[targetMonth],
+                    day: 25,
+                    year: year
+                };
+            } else {
+                // Usar el sistema anterior para clientes existentes sin mesCuota2 definido
+                const clientCycle = (client.id - 1) % 12;
+                const baseMonth = getMonthNumber('Octubre');
+                const targetMonth = (baseMonth + clientCycle + (cuotaNumber - 2)) % 12;
+                const monthNames = ['Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'];
+                
+                return {
+                    month: monthNames[targetMonth],
+                    day: 25,
+                    year: targetMonth < baseMonth ? 2025 : 2024
+                };
+            }
+        }
+
+        function filterData() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const cuotaFilter = document.getElementById('cuotaFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredData = clientsData.filter(client => {
+                // Filtro de búsqueda
+                if (searchText && !client.nombre.toLowerCase().includes(searchText) && 
+                    !client.apellido.toLowerCase().includes(searchText) &&
+                    !client.dni.includes(searchText) &&
+                    !client.email.toLowerCase().includes(searchText)) {
+                    return false;
+                }
+                
+                // Filtro de estado, cuota y mes
+                if (statusFilter || cuotaFilter || monthFilter) {
+                    const cuotasToCheck = cuotaFilter ? [cuotaFilter] : Object.keys(client.cuotas);
+                    return cuotasToCheck.some(cuotaNum => {
+                        const cuota = client.cuotas[cuotaNum];
+                        
+                        // Verificar filtro de estado
+                        if (statusFilter && (!cuota || cuota.status !== statusFilter)) {
+                            return false;
+                        }
+                        
+                        // Verificar filtro de mes
+                        if (monthFilter) {
+                            const clientDueDate = getClientCuotaDueDate(client, parseInt(cuotaNum));
+                            if (clientDueDate.month !== monthFilter) {
+                                return false;
+                            }
+                        }
+                        
+                        return true;
+                    });
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+            
+            const tbody = document.getElementById('clientsTableBody');
+            tbody.innerHTML = '';
+            
+            pageData.forEach(client => {
+                const pendingCuotas = Object.entries(client.cuotas).filter(([_, cuota]) => cuota.status === 'pending').length;
+                const validatedCuotas = Object.entries(client.cuotas).filter(([_, cuota]) => cuota.status === 'ready-delivery' || cuota.status === 'dispatched' || cuota.status === 'delivered').length;
+                
+                // Acortar plan para que quepa mejor
+                const shortPlan = client.plan.replace('2024 - Plan ', '').replace('Premium', 'Prem').replace('Estándar', 'Est');
+                
+                const row = document.createElement('tr');
+                
+                // Diferentes acciones según el rol
+                let actionsButtons = '';
+                if (currentUser.role === 'validator') {
+                    actionsButtons = `<button class="action-btn view-btn" onclick="viewClient(${client.id})" style="font-size: 0.8rem; padding: 6px 12px;">Validar</button>`;
+                } else if (currentUser.role === 'responsable') {
+                    actionsButtons = `<button class="action-btn view-btn" onclick="viewClient(${client.id})" style="font-size: 0.8rem; padding: 6px 12px; background: #3498db;">Gestionar</button>`;
+                } else if (currentUser.role === 'owner') {
+                    actionsButtons = `
+                        <button class="action-btn view-btn" onclick="viewClient(${client.id})" style="font-size: 0.8rem; padding: 6px 12px;">Ver Todo</button>
+                        <button class="action-btn export-btn" onclick="exportClient(${client.id})" style="font-size: 0.8rem; padding: 6px 12px;">Exp</button>
+                    `;
+                }
+                
+                row.innerHTML = `
+                    <td style="font-weight: bold;">${client.nombre} ${client.apellido}</td>
+                    <td>${client.dni}</td>
+                    <td style="font-size: 0.8rem;">${client.email}</td>
+                    <td style="font-size: 0.8rem;">${shortPlan}</td>
+                    <td style="text-align: center;"><span class="status-badge status-pending">${pendingCuotas}</span></td>
+                    <td style="text-align: center;"><span class="status-badge status-validated">${validatedCuotas}</span></td>
+                    <td>${actionsButtons}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Botón anterior
+            if (currentPage > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'page-btn';
+                prevBtn.textContent = '« Anterior';
+                prevBtn.onclick = () => changePage(currentPage - 1);
+                pagination.appendChild(prevBtn);
+            }
+            
+            // Números de página
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => changePage(i);
+                    pagination.appendChild(pageBtn);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    pagination.appendChild(ellipsis);
+                }
+            }
+            
+            // Botón siguiente
+            if (currentPage < totalPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'page-btn';
+                nextBtn.textContent = 'Siguiente »';
+                nextBtn.onclick = () => changePage(currentPage + 1);
+                pagination.appendChild(nextBtn);
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function viewClient(clientId) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client) return;
+            
+            // Llenar detalles del cliente
+            const clientDetails = document.getElementById('clientDetails');
+            clientDetails.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Nombre Completo</div>
+                    <div class="detail-value">${client.nombre} ${client.apellido}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">DNI</div>
+                    <div class="detail-value">${client.dni}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">${client.email}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Teléfono</div>
+                    <div class="detail-value">${client.telefono}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Plan</div>
+                    <div class="detail-value">${client.plan}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Dirección</div>
+                    <div class="detail-value">${client.direccion}, ${client.localidad} (${client.cp})</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Fecha de Registro</div>
+                    <div class="detail-value">${client.registrationDate}</div>
+                </div>
+            `;
+            
+            // Llenar estado de cuotas
+            const cuotasGrid = document.getElementById('cuotasGrid');
+            cuotasGrid.innerHTML = '';
+            
+            for (let i = 2; i <= 12; i++) {
+                const cuota = client.cuotas[i];
+                const cuotaCard = document.createElement('div');
+                
+                // Determinar el estado de la cuota basado en fechas
+                let timeStatus = 'normal';
+                if (cuota) {
+                    timeStatus = getCuotaStatus(i, cuota.uploadDate);
+                } else {
+                    timeStatus = getCuotaStatus(i, null);
+                }
+                
+                cuotaCard.className = `cuota-card ${cuota ? cuota.status : 'not-uploaded'} ${timeStatus}`;
+                
+                let statusHtml = '';
+                let filePreviewHtml = '';
+                let actionsHtml = '';
+                let historyHtml = '';
+                let dueDateHtml = '';
+                
+                // Información de fecha de vencimiento específica del cliente
+                const clientDueDate = getClientCuotaDueDate(client, i);
+                const dueDate = `${clientDueDate.day}/${clientDueDate.month.substring(0,3)}/${clientDueDate.year}`;
+                let dueDateClass = timeStatus;
+                
+                if (cuota && cuota.status === 'validated') {
+                    dueDateClass = 'validated';
+                } else if (cuota && cuota.status === 'rejected') {
+                    dueDateClass = 'rejected';
+                }
+                
+                dueDateHtml = `<div class="due-date ${dueDateClass}">Vence: ${dueDate} (${clientDueDate.month})</div>`;
+                
+                if (cuota) {
+                    // Crear preview del archivo
+                    if (cuota.fileType === 'image') {
+                        filePreviewHtml = `
+                            <div class="file-preview">
+                                <img src="${cuota.fileUrl}" alt="Comprobante Cuota ${i}" onclick="openImageModal('${cuota.fileUrl}', '${cuota.file}')">
+                                <div>
+                                    <strong>Archivo:</strong> ${cuota.file}<br>
+                                    <strong>Subido:</strong> ${cuota.uploadDate}
+                                </div>
+                            </div>
+                        `;
+                    } else if (cuota.fileType === 'pdf') {
+                        filePreviewHtml = `
+                            <div class="file-preview">
+                                <div class="pdf-placeholder">📄</div>
+                                <div>
+                                    <strong>Archivo PDF:</strong> ${cuota.file}<br>
+                                    <strong>Subido:</strong> ${cuota.uploadDate}<br>
+                                    <a href="#" class="download-btn" onclick="downloadFile('${cuota.file}', '${cuota.fileUrl}')">
+                                        📥 Descargar PDF
+                                    </a>
+                                    <button class="download-btn" onclick="viewPdfModal('${cuota.file}')">
+                                        👁️ Vista Previa
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    switch (cuota.status) {
+                        case 'pending':
+                            statusHtml = '<span class="status-badge status-pending">⏳ Pendiente de Validación</span>';
+                            if (timeStatus === 'late') {
+                                statusHtml += '<br><span class="status-badge status-late">⚠️ Subido Tarde</span>';
+                            }
+                            
+                            // Validadores Y dueños pueden validar/rechazar
+                            if (currentUser.role === 'validator' || currentUser.role === 'owner') {
+                                actionsHtml = `
+                                    <div class="validation-panel pending">
+                                        <h4>🔍 Revisar Comprobante</h4>
+                                        <p><strong>Instrucciones:</strong> Revisa cuidadosamente el comprobante de pago. Verifica que coincidan los datos del cliente, monto y fecha.</p>
+                                        <div class="validation-actions">
+                                            <button class="large-action-btn large-validate-btn" onclick="validateCuota(${clientId}, ${i}, true)">
+                                                ✅ VALIDAR CUOTA
+                                            </button>
+                                            <button class="large-action-btn large-reject-btn" onclick="validateCuota(${clientId}, ${i}, false)">
+                                                ❌ RECHAZAR
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            break;
+                            
+                        case 'ready-delivery':
+                            // Mostrar diferente información según el rol
+                            if (currentUser.role === 'validator') {
+                                statusHtml = `<span class="status-badge status-validated">✅ Validado - Aprobado</span>`;
+                                actionsHtml = `
+                                    <div class="validation-panel">
+                                        <p><strong>✅ Validación Completada</strong><br>El premio está en proceso de entrega por parte del responsable/administrador.</p>
+                                    </div>
+                                `;
+                            } else if (currentUser.role === 'responsable') {
+                                statusHtml = `<span class="status-badge status-ready-delivery">📦 Listo para Entrega</span>`;
+                                actionsHtml = `
+                                    <div class="delivery-panel">
+                                        <h4>📦 Gestión de Entrega</h4>
+                                        <p><strong>El premio está validado y listo para ser despachado.</strong></p>
+                                        <div class="delivery-actions">
+                                            <button class="large-delivery-btn" onclick="dispatchPrize(${clientId}, ${i})">
+                                                🚚 DESPACHAR PREMIO
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (currentUser.role === 'owner') {
+                                statusHtml = `<span class="status-badge status-ready-delivery">📦 Listo para Entrega</span>`;
+                                actionsHtml = `
+                                    <div class="delivery-panel">
+                                        <h4>📦 Gestión de Entrega</h4>
+                                        <p><strong>El premio está listo para ser despachado al cliente.</strong></p>
+                                        <div class="delivery-actions">
+                                            <button class="large-delivery-btn" onclick="dispatchPrize(${clientId}, ${i})">
+                                                🚚 DESPACHAR PREMIO
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            historyHtml = `
+                                <div class="validation-history">
+                                    <strong>✅ Cuota Validada</strong><br>
+                                    <strong>Validador:</strong> ${cuota.validatedBy}<br>
+                                    <strong>Fecha:</strong> ${cuota.validationDate}<br>
+                                    <div class="timestamp">Cliente notificado - Premio aprobado</div>
+                                </div>
+                            `;
+                            break;
+                            
+                        case 'dispatched':
+                            // Información según el rol
+                            if (currentUser.role === 'validator') {
+                                statusHtml = `<span class="status-badge status-dispatched">📦 Premio en Camino</span>`;
+                                if (cuota.trackingNumber) {
+                                    actionsHtml = `
+                                        <div class="dispatch-panel">
+                                            <h4>📋 Información de Envío</h4>
+                                            <div class="tracking-info">
+                                                <strong>Número de seguimiento:</strong> ${cuota.trackingNumber}<br>
+                                                <strong>Empresa:</strong> ${cuota.carrier}<br>
+                                                <strong>Tiempo estimado:</strong> ${cuota.estimatedDays} días<br>
+                                                <strong>Estado:</strong> En tránsito al cliente
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            } else if (currentUser.role === 'responsable') {
+                                statusHtml = `<span class="status-badge status-dispatched">🚚 Despachado</span>`;
+                                if (cuota.trackingNumber) {
+                                    actionsHtml = `
+                                        <div class="dispatch-panel">
+                                            <h4>📋 Información de Envío</h4>
+                                            <div class="tracking-info">
+                                                <strong>Número de seguimiento:</strong> ${cuota.trackingNumber}<br>
+                                                <strong>Empresa:</strong> ${cuota.carrier}<br>
+                                                <strong>Tiempo estimado:</strong> ${cuota.estimatedDays} días<br>
+                                                <strong>Estado:</strong> En tránsito
+                                            </div>
+                                            <div class="delivery-actions">
+                                                <button class="action-btn view-btn" onclick="resendTrackingEmail(${clientId}, ${i})">
+                                                    📧 Reenviar Info
+                                                </button>
+                                                <button class="action-btn export-btn" onclick="markAsDelivered(${clientId}, ${i})">
+                                                    ✅ Marcar Entregado
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            } else if (currentUser.role === 'owner') {
+                                statusHtml = `<span class="status-badge status-dispatched">🚚 Despachado</span>`;
+                                if (cuota.trackingNumber) {
+                                    actionsHtml = `
+                                        <div class="dispatch-panel">
+                                            <h4>📋 Información de Envío</h4>
+                                            <div class="tracking-info">
+                                                <strong>Número de seguimiento:</strong> ${cuota.trackingNumber}<br>
+                                                <strong>Empresa:</strong> ${cuota.carrier}<br>
+                                                <strong>Tiempo estimado:</strong> ${cuota.estimatedDays} días<br>
+                                                <strong>Estado:</strong> En tránsito
+                                            </div>
+                                            <div class="delivery-actions">
+                                                <button class="action-btn view-btn" onclick="resendTrackingEmail(${clientId}, ${i})">
+                                                    📧 Reenviar Info
+                                                </button>
+                                                <button class="action-btn export-btn" onclick="markAsDelivered(${clientId}, ${i})">
+                                                    ✅ Marcar Entregado
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            
+                            historyHtml = `
+                                <div class="validation-history">
+                                    <strong>🚚 Premio Despachado</strong><br>
+                                    <strong>Despachado por:</strong> ${cuota.dispatchedBy}<br>
+                                    <strong>Fecha:</strong> ${cuota.dispatchDate}<br>
+                                    <div class="timestamp">Cliente notificado con información de seguimiento</div>
+                                </div>
+                            `;
+                            break;
+                            
+                        case 'delivered':
+                            statusHtml = `<span class="status-badge status-validated">🏆 Entregado</span>`;
+                            historyHtml = `
+                                <div class="validation-history">
+                                    <strong>🏆 Premio Entregado</strong><br>
+                                    <strong>Fecha de entrega:</strong> ${cuota.deliveryDate}<br>
+                                    <strong>Confirmado por:</strong> ${cuota.deliveredBy}<br>
+                                    <div class="timestamp">Cliente satisfecho - Proceso completado</div>
+                                </div>
+                            `;
+                            break;
+                            
+                        case 'rejected':
+                            statusHtml = `<span class="status-badge status-rejected">❌ Rechazada</span>`;
+                            historyHtml = `
+                                <div class="validation-history rejected">
+                                    <strong>❌ Cuota Rechazada</strong><br>
+                                    <strong>Rechazado por:</strong> ${cuota.rejectedBy}<br>
+                                    <strong>Fecha:</strong> ${cuota.rejectionDate}<br>
+                                    ${cuota.reason ? `<strong>Motivo:</strong> ${cuota.reason}<br>` : ''}
+                                    <div class="timestamp">Cliente notificado para resubir comprobante</div>
+                                </div>
+                            `;
+                            break;
+                    }
+                } else {
+                    // Cuota no subida
+                    if (timeStatus === 'overdue') {
+                        statusHtml = '<span class="status-badge status-overdue">🚨 VENCIDA</span>';
+                        filePreviewHtml = '<div class="file-preview"><p><strong>⚠️ CUOTA VENCIDA</strong><br>El cliente aún no ha subido el comprobante de esta cuota</p></div>';
+                    } else {
+                        statusHtml = '<span class="status-badge">📋 No subida</span>';
+                        filePreviewHtml = '<div class="file-preview"><p>El cliente aún no ha subido el comprobante de esta cuota</p></div>';
+                    }
+                }
+                
+                cuotaCard.innerHTML = `
+                    <div class="cuota-header">
+                        <div class="cuota-number">Cuota ${i}</div>
+                        ${statusHtml}
+                    </div>
+                    ${dueDateHtml}
+                    ${filePreviewHtml}
+                    ${historyHtml}
+                    ${actionsHtml}
+                `;
+                
+                cuotasGrid.appendChild(cuotaCard);
+            }
+            
+            document.getElementById('clientModal').style.display = 'flex';
+        }
+
+        function validateCuota(clientId, cuotaNumber, isValid) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client || !client.cuotas[cuotaNumber]) return;
+            
+            // Mostrar indicador de sincronización
+            showSyncIndicator();
+            
+            const reason = isValid ? null : prompt('Motivo del rechazo (opcional):');
+            
+            if (isValid) {
+                client.cuotas[cuotaNumber].status = 'ready-delivery';
+                client.cuotas[cuotaNumber].validatedBy = currentUser.name;
+                client.cuotas[cuotaNumber].validationDate = new Date().toISOString().split('T')[0];
+                
+                // Simular notificación al cliente
+                simulateClientNotification(client, cuotaNumber, 'validated');
+                alert(`✅ Cuota ${cuotaNumber} validada correctamente.\n\n📦 El premio ahora está LISTO PARA ENTREGA.\n📧 Se ha notificado automáticamente a ${client.nombre} ${client.apellido} que su premio fue aprobado.`);
+            } else {
+                client.cuotas[cuotaNumber].status = 'rejected';
+                client.cuotas[cuotaNumber].rejectedBy = currentUser.name;
+                client.cuotas[cuotaNumber].rejectionDate = new Date().toISOString().split('T')[0];
+                if (reason) {
+                    client.cuotas[cuotaNumber].reason = reason;
+                }
+                
+                // Simular notificación al cliente
+                simulateClientNotification(client, cuotaNumber, 'rejected', reason);
+                alert(`❌ Cuota ${cuotaNumber} rechazada.\n\n📧 Se ha notificado a ${client.nombre} ${client.apellido} que debe subir un nuevo comprobante.`);
+            }
+            
+            // Sincronizar con sistema del cliente (simulado)
+            syncWithClientSystem(clientId, cuotaNumber, client.cuotas[cuotaNumber]);
+            
+            // Actualizar vista
+            setTimeout(() => {
+                hideSyncIndicator();
+                viewClient(clientId);
+                updateStats();
+                renderTable();
+            }, 1500);
+        }
+
+        function markAsReadyForDelivery(clientId, cuotaNumber) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client || !client.cuotas[cuotaNumber]) return;
+            
+            showSyncIndicator();
+            
+            client.cuotas[cuotaNumber].status = 'ready-delivery';
+            client.cuotas[cuotaNumber].readyDate = new Date().toISOString().split('T')[0];
+            
+            alert(`📦 Premio de cuota ${cuotaNumber} marcado como LISTO PARA ENTREGA.`);
+            
+            setTimeout(() => {
+                hideSyncIndicator();
+                viewClient(clientId);
+                updateStats();
+                renderTable();
+            }, 1000);
+        }
+
+        function dispatchPrize(clientId, cuotaNumber) {
+            if (currentUser.role !== 'owner') {
+                alert('Solo el dueño puede marcar premios como despachados');
+                return;
+            }
+            
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client || !client.cuotas[cuotaNumber]) return;
+            
+            // Solicitar información de envío
+            const trackingNumber = prompt('Número de seguimiento (opcional):') || `TR${Date.now().toString().slice(-8)}`;
+            const carrier = prompt('Empresa de envío:') || 'Correo Argentino';
+            const estimatedDays = prompt('Días estimados de entrega:') || '3-5';
+            
+            showSyncIndicator();
+            
+            client.cuotas[cuotaNumber].status = 'dispatched';
+            client.cuotas[cuotaNumber].dispatchedBy = currentUser.name;
+            client.cuotas[cuotaNumber].dispatchDate = new Date().toISOString().split('T')[0];
+            client.cuotas[cuotaNumber].trackingNumber = trackingNumber;
+            client.cuotas[cuotaNumber].carrier = carrier;
+            client.cuotas[cuotaNumber].estimatedDays = estimatedDays;
+            
+            // Enviar email de seguimiento
+            sendTrackingEmail(client, cuotaNumber, trackingNumber, carrier, estimatedDays);
+            
+            alert(`📦 Premio DESPACHADO correctamente.\n\n📧 Se ha enviado email de seguimiento a ${client.nombre} ${client.apellido} con la información de envío.`);
+            
+            setTimeout(() => {
+                hideSyncIndicator();
+                viewClient(clientId);
+                updateStats();
+                renderTable();
+            }, 1500);
+        }
+
+        function sendTrackingEmail(client, cuotaNumber, trackingNumber, carrier, estimatedDays) {
+            const prizes = {
+                2: '🧢 Gorra Mundial 2026',
+                3: '⚽ Pelota de fútbol Alra Mundial',
+                4: '💰 Voucher $1.000.000',
+                5: '👕 Camiseta Argentina Mundial 2026',
+                6: '🚗 Polarizado',
+                7: '🇦🇷 Bandera Argentina Mundial 2026',
+                8: '⛽ Tanque lleno de nafta',
+                9: '🏖️ Voucher vacacional',
+                10: '🎁 Premio sorpresa',
+                11: '🏆 Premio especial',
+                12: '🎉 Gran premio final'
+            };
+            
+            const emailContent = `
+¡EXCELENTES NOTICIAS ${client.nombre.toUpperCase()} ${client.apellido.toUpperCase()}! 📦
+
+🎉 ¡TU PREMIO YA ESTÁ EN CAMINO! 🎉
+
+Tu premio de la Cuota ${cuotaNumber} ha sido despachado y pronto llegará a tu domicilio.
+
+🎁 PREMIO DESPACHADO:
+${prizes[cuotaNumber]}
+
+📦 INFORMACIÓN DE ENVÍO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Número de seguimiento: ${trackingNumber}
+🚚 Empresa de envío: ${carrier}
+📍 Dirección de entrega: ${client.direccion}, ${client.localidad} (${client.cp})
+⏰ Tiempo estimado: ${estimatedDays} días hábiles
+📅 Fecha de despacho: ${new Date().toLocaleDateString('es-AR')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 SEGUIMIENTO:
+Puedes rastrear tu envío en: www.${carrier.toLowerCase().replace(' ', '')}.com.ar
+Código de seguimiento: ${trackingNumber}
+
+⚠️ IMPORTANTE:
+• Mantente atento a tu domicilio los próximos días
+• Tener DNI disponible para recibir el envío
+• Si no estás, dejarán aviso de visita
+• Cualquier consulta, contacta a tu asesor
+
+🏆 ¡SIGUE PAGANDO TUS CUOTAS AL DÍA!
+Recuerda que tienes más premios esperándote en las próximas cuotas.
+
+¡Gracias por participar en la Promoción Mundial 2026! 🇦🇷
+
+Equipo Promoción Mundial 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            `;
+            
+            // Log del email en consola
+            console.log('📧 EMAIL DE SEGUIMIENTO ENVIADO:');
+            console.log('Para:', client.email);
+            console.log('Asunto: 🎁 ¡Tu premio está en camino! - Promoción Mundial 2026');
+            console.log('Contenido:');
+            console.log(emailContent);
+            console.log('---');
+        }
+
+        function simulateClientNotification(client, cuotaNumber, status, reason = null) {
+            const prizes = {
+                2: 'Gorra Mundial 2026',
+                3: 'Pelota de fútbol Alra Mundial',
+                4: 'Voucher $1.000.000',
+                5: 'Camiseta Argentina Mundial 2026',
+                6: 'Polarizado',
+                7: 'Bandera Argentina Mundial 2026',
+                8: 'Tanque lleno de nafta',
+                9: 'Voucher vacacional'
+            };
+            
+            if (status === 'validated') {
+                console.log(`📧 EMAIL ENVIADO A: ${client.email}`);
+                console.log(`🎉 ¡Felicitaciones ${client.nombre}! Tu cuota ${cuotaNumber} ha sido validada.`);
+                console.log(`🏆 Ya puedes reclamar tu premio: ${prizes[cuotaNumber]}`);
+                console.log(`📱 Ingresa a tu panel de cliente para reclamar tu premio.`);
+            } else if (status === 'rejected') {
+                console.log(`📧 EMAIL ENVIADO A: ${client.email}`);
+                console.log(`⚠️ Hola ${client.nombre}, necesitamos que resubas el comprobante de la cuota ${cuotaNumber}.`);
+                if (reason) {
+                    console.log(`📝 Motivo: ${reason}`);
+                }
+                console.log(`📱 Ingresa a tu panel para subir un nuevo comprobante.`);
+            }
+        }
+
+        function syncWithClientSystem(clientId, cuotaNumber, cuotaData) {
+            // Simular sincronización con el sistema del cliente
+            const syncData = {
+                clientId,
+                cuotaNumber,
+                status: cuotaData.status,
+                validatedBy: cuotaData.validatedBy,
+                validationDate: cuotaData.validationDate,
+                rejectedBy: cuotaData.rejectedBy,
+                rejectionDate: cuotaData.rejectionDate,
+                reason: cuotaData.reason,
+                timestamp: new Date().toISOString()
+            };
+            
+            // En una aplicación real, esto sería una llamada a la API del cliente
+            console.log('🔄 SINCRONIZANDO CON SISTEMA DEL CLIENTE:', syncData);
+            
+            // Simular actualizacion en localStorage del cliente (si está en la misma sesión)
+            try {
+                const clientKey = `${clientsData.find(c => c.id === clientId).nombre}_${clientsData.find(c => c.id === clientId).apellido}_data`;
+                const clientLocalData = localStorage.getItem(clientKey);
+                if (clientLocalData) {
+                    const data = JSON.parse(clientLocalData);
+                    data.validationStatus = data.validationStatus || {};
+                    data.validationStatus[cuotaNumber] = cuotaData.status;
+                    localStorage.setItem(clientKey, JSON.stringify(data));
+                    console.log('✅ Datos sincronizados con el sistema del cliente');
+                }
+            } catch (error) {
+                console.log('ℹ️ Cliente no encontrado en esta sesión');
+            }
+        }
+
+        function showSyncIndicator() {
+            const indicator = document.createElement('div');
+            indicator.id = 'syncIndicator';
+            indicator.className = 'sync-indicator syncing';
+            indicator.innerHTML = '🔄 Sincronizando...';
+            document.body.appendChild(indicator);
+        }
+
+        function hideSyncIndicator() {
+            const indicator = document.getElementById('syncIndicator');
+            if (indicator) {
+                indicator.className = 'sync-indicator';
+                indicator.innerHTML = '✅ Sincronizado';
+                setTimeout(() => {
+                    indicator.remove();
+                }, 2000);
+            }
+        }
+
+        function openImageModal(imageUrl, fileName) {
+            // Crear modal para ver imagen completa
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+                    <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h3>📄 ${fileName}</h3>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <img src="${imageUrl}" alt="${fileName}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="download-btn" onclick="downloadFile('${fileName}', '${imageUrl}')">
+                            📥 Descargar Imagen
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Cerrar al hacer clic fuera
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.remove();
+                }
+            }
+        }
+
+        function viewPdfModal(fileName) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+                    <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h3>📄 Vista Previa: ${fileName}</h3>
+                    <div style="text-align: center; margin-top: 20px; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">📄</div>
+                        <p><strong>Archivo PDF:</strong> ${fileName}</p>
+                        <p>En una aplicación real, aquí se mostraría el contenido del PDF usando un visor como PDF.js</p>
+                        <div style="margin-top: 20px;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #27ae60;">
+                                <strong>Comprobante de Pago</strong><br>
+                                Banco: Banco Nación<br>
+                                Importe: $150.000<br>
+                                Fecha: 15/03/2024<br>
+                                CBU: ••••••••••••••••••20
+                            </div>
+                        </div>
+                        <button class="download-btn" onclick="downloadFile('${fileName}', 'data:application/pdf;base64,sample')">
+                            📥 Descargar PDF
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.remove();
+                }
+            }
+        }
+
+        function downloadFile(fileName, fileUrl) {
+            if (fileUrl.startsWith('data:application/pdf')) {
+                // Simular descarga de PDF
+                alert(`📥 Descargando: ${fileName}\n\nEn una aplicación real, aquí se iniciaría la descarga del archivo PDF.`);
+            } else {
+                // Descargar imagen real
+                const a = document.createElement('a');
+                a.href = fileUrl;
+                a.download = fileName;
+                a.click();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('clientModal').style.display = 'none';
+        }
+
+        function refreshData() {
+            loadClientsData();
+            updateStats();
+            alert('Datos actualizados');
+        }
+
+        // Funciones específicas del dueño
+        function exportData() {
+            const data = JSON.stringify(clientsData, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'clientes_promocion_mundial.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportClient(clientId) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client) return;
+            
+            const data = JSON.stringify(client, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cliente_${client.dni}_${client.apellido}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            let report = 'REPORTE DE PROMOCIÓN MUNDIAL 2026\n';
+            report += '=====================================\n\n';
+            
+            clientsData.forEach(client => {
+                report += `Cliente: ${client.nombre} ${client.apellido}\n`;
+                report += `DNI: ${client.dni}\n`;
+                report += `Email: ${client.email}\n`;
+                report += `Plan: ${client.plan}\n`;
+                report += 'Cuotas:\n';
+                
+                Object.entries(client.cuotas).forEach(([num, cuota]) => {
+                    report += `  - Cuota ${num}: ${cuota.status.toUpperCase()}`;
+                    if (cuota.status === 'validated' && cuota.validatedBy) {
+                        report += ` (Validada por ${cuota.validatedBy})`;
+                    } else if (cuota.status === 'rejected' && cuota.rejectedBy) {
+                        report += ` (Rechazada por ${cuota.rejectedBy})`;
+                    }
+                    report += '\n';
+                });
+                
+                report += '\n';
+            });
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_promocion_mundial.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function openSettings() {
+            alert('Funcionalidad de configuración en desarrollo');
+        }
+
+        function sendAlerts() {
+            const pendingClients = clientsData.filter(client => 
+                Object.values(client.cuotas).some(cuota => cuota.status === 'pending')
+            );
+            
+            alert(`Se enviarán alertas a ${pendingClients.length} clientes con cuotas pendientes de validación`);
+        }
+
+        // Función para refrescar datos
+        function refreshData() {
+            showSyncIndicator();
+            
+            // Simular carga de datos
+            setTimeout(() => {
+                loadClientsData();
+                updateStats();
+                hideSyncIndicator();
+                alert('Datos actualizados correctamente');
+            }, 1000);
+        }
+
+        // Función para mostrar estadísticas detalladas
+        function showDetailedStats() {
+            let totalFiles = 0;
+            let totalClients = clientsData.length;
+            let clientsWithPending = 0;
+            let clientsFullyValidated = 0;
+            
+            clientsData.forEach(client => {
+                const cuotas = Object.values(client.cuotas);
+                totalFiles += cuotas.length;
+                
+                const hasPending = cuotas.some(c => c.status === 'pending');
+                const allValidated = cuotas.length > 0 && cuotas.every(c => c.status === 'validated');
+                
+                if (hasPending) clientsWithPending++;
+                if (allValidated) clientsFullyValidated++;
+            });
+            
+            alert(`📊 ESTADÍSTICAS DETALLADAS
+            
+Total de clientes: ${totalClients}
+Total de archivos subidos: ${totalFiles}
+Clientes con cuotas pendientes: ${clientsWithPending}
+Clientes completamente validados: ${clientsFullyValidated}
+Porcentaje de validación: ${((clientsFullyValidated / totalClients) * 100).toFixed(1)}%`);
+        }
+
+        // Función para filtro rápido de pendientes
+        function showOnlyPending() {
+            document.getElementById('statusFilter').value = 'pending';
+            filterData();
+        }
+
+        // Función para filtro rápido de validados
+        function showOnlyValidated() {
+            document.getElementById('statusFilter').value = 'validated';
+            filterData();
+        }
+
+        // Función para limpiar filtros
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('cuotaFilter').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            filterData();
+        }
+
+        // Función para exportar solo pendientes
+        function exportPendingOnly() {
+            const pendingData = clientsData.map(client => {
+                const pendingCuotas = Object.entries(client.cuotas)
+                    .filter(([_, cuota]) => cuota.status === 'pending')
+                    .reduce((acc, [num, cuota]) => {
+                        acc[num] = cuota;
+                        return acc;
+                    }, {});
+                
+                if (Object.keys(pendingCuotas).length > 0) {
+                    return {
+                        ...client,
+                        cuotas: pendingCuotas
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+            
+            const data = JSON.stringify(pendingData, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cuotas_pendientes.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Función para validación masiva (solo para dueño)
+        function massValidate() {
+            if (currentUser.role !== 'owner') {
+                alert('Solo el dueño puede realizar validaciones masivas');
+                return;
+            }
+            
+            const confirmed = confirm('¿Estás seguro de que quieres validar TODAS las cuotas pendientes? Esta acción no se puede deshacer.');
+            
+            if (confirmed) {
+                showSyncIndicator();
+                
+                let validatedCount = 0;
+                clientsData.forEach(client => {
+                    Object.entries(client.cuotas).forEach(([num, cuota]) => {
+                        if (cuota.status === 'pending') {
+                            cuota.status = 'validated';
+                            cuota.validatedBy = currentUser.name + ' (Masiva)';
+                            cuota.validationDate = new Date().toISOString().split('T')[0];
+                            validatedCount++;
+                        }
+                    });
+                });
+                
+                setTimeout(() => {
+                    hideSyncIndicator();
+                    updateStats();
+                    renderTable();
+                    alert(`✅ Validación masiva completada: ${validatedCount} cuotas validadas`);
+                }, 2000);
+            }
+        }
+
+        // Funciones de teclado para navegación rápida
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case 'f':
+                        event.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        refreshData();
+                        break;
+                    case 'p':
+                        event.preventDefault();
+                        showOnlyPending();
+                        break;
+                    case 'v':
+                        event.preventDefault();
+                        showOnlyValidated();
+                        break;
+                }
+            }
+            
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Función para mostrar ayuda de atajos
+        function showKeyboardHelp() {
+            alert(`⌨️ ATAJOS DE TECLADO:
+
+Ctrl/Cmd + F: Buscar cliente
+Ctrl/Cmd + R: Actualizar datos  
+Ctrl/Cmd + P: Mostrar solo pendientes
+Ctrl/Cmd + V: Mostrar solo validados
+Escape: Cerrar modal
+
+💡 CONSEJOS:
+- Haz clic en las imágenes para ampliarlas
+- Los PDFs muestran vista previa simulada
+- Las validaciones se sincronizan automáticamente`);
+        }
+
+        // Función mejorada para configuración
+        function openSettings() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2>⚙️ Configuración del Sistema</h2>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3>Notificaciones</h3>
+                        <label><input type="checkbox" checked> Email automático al validar</label><br>
+                        <label><input type="checkbox" checked> Email automático al rechazar</label><br>
+                        <label><input type="checkbox"> Notificaciones push</label>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3>Validación</h3>
+                        <label><input type="checkbox"> Requerir comentario en rechazos</label><br>
+                        <label><input type="checkbox" checked> Validación en dos pasos</label><br>
+                        <label><input type="checkbox"> Auto-validar montos exactos</label>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3>Interfaz</h3>
+                        <label><input type="checkbox" checked> Mostrar vistas previas</label><br>
+                        <label><input type="checkbox" checked> Animaciones</label><br>
+                        <label><input type="checkbox"> Modo oscuro</label>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="action-btn validate-btn" onclick="alert('Configuración guardada'); this.parentElement.parentElement.parentElement.remove();">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('clientModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Variables para importación
+        let importData = [];
+        let nextClientId = 5; // Continuar desde el último ID
+
+        function openImportModal() {
+            if (currentUser.role !== 'owner') {
+                alert('Solo el dueño puede importar clientes');
+                return;
+            }
+            
+            document.getElementById('importModal').style.display = 'flex';
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('importResults').style.display = 'none';
+            document.getElementById('excelFile').value = '';
+            importData = [];
+        }
+
+        function downloadTemplate() {
+            // Crear datos de ejemplo para la plantilla
+            const templateData = [
+                ['Nombre', 'Apellido', 'DNI', 'Email', 'Teléfono', 'Plan', 'Dirección', 'Localidad', 'CP', 'Mes Cuota 2'],
+                ['Carlos', 'López', '20345678', 'carlos.lopez@email.com', '11-2345-6789', 'Civic 2024 - Plan Estándar', 'Av. Libertador 2000', 'Vicente López', '1638', 'Octubre'],
+                ['Laura', 'García', '27456789', 'laura.garcia@email.com', '11-3456-7890', 'Corolla 2024 - Plan Premium', 'Calle 8 No 1500', 'La Plata', '1900', 'Noviembre'],
+                ['Diego', 'Fernández', '33567890', 'diego.fernandez@email.com', '11-4567-8901', 'Sentra 2024 - Plan Básico', 'Av. San Martín 800', 'San Isidro', '1642', 'Diciembre']
+            ];
+            
+            // Convertir a CSV (compatible con Excel)
+            let csvContent = templateData.map(row => 
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+            
+            // Agregar BOM para Excel
+            csvContent = '\uFEFF' + csvContent;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'plantilla_clientes_mundial2026.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('📄 Plantilla descargada. Completa los datos y súbela nuevamente.\n\n💡 Puedes abrir el archivo .csv con Excel para editarlo más fácilmente.');
+        }
+
+        function processExcel() {
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona un archivo Excel');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    let workbook;
+                    
+                    // Simular lectura de Excel (en aplicación real usarías SheetJS)
+                    if (file.name.endsWith('.csv')) {
+                        // Procesar CSV
+                        const text = new TextDecoder('utf-8').decode(data);
+                        const lines = text.split('\n').filter(line => line.trim());
+                        
+                        // Saltar header
+                        const dataLines = lines.slice(1);
+                        
+                        importData = dataLines.map((line, index) => {
+                            const columns = line.split(',').map(col => col.replace(/"/g, '').trim());
+                            
+                            if (columns.length < 10) {
+                                throw new Error(`Fila ${index + 2}: Faltan columnas (se requieren 10)`);
+                            }
+                            
+                            return {
+                                nombre: columns[0],
+                                apellido: columns[1],
+                                dni: columns[2],
+                                email: columns[3],
+                                telefono: columns[4],
+                                plan: columns[5],
+                                direccion: columns[6],
+                                localidad: columns[7],
+                                cp: columns[8],
+                                mesCuota2: columns[9],
+                                status: 'Pendiente',
+                                errors: []
+                            };
+                        });
+                    } else {
+                        // Simular datos para demo (en aplicación real procesarías Excel real)
+                        importData = [
+                            {
+                                nombre: 'Carlos',
+                                apellido: 'López',
+                                dni: '20345678',
+                                email: 'carlos.lopez@email.com',
+                                telefono: '11-2345-6789',
+                                plan: 'Civic 2024 - Plan Estándar',
+                                direccion: 'Av. Libertador 2000',
+                                localidad: 'Vicente López',
+                                cp: '1638',
+                                mesCuota2: 'Octubre',
+                                status: 'Listo',
+                                errors: []
+                            },
+                            {
+                                nombre: 'Laura',
+                                apellido: 'García',
+                                dni: '27456789',
+                                email: 'laura.garcia@email.com',
+                                telefono: '11-3456-7890',
+                                plan: 'Corolla 2024 - Plan Premium',
+                                direccion: 'Calle 8 No 1500',
+                                localidad: 'La Plata',
+                                cp: '1900',
+                                mesCuota2: 'Noviembre',
+                                status: 'Listo',
+                                errors: []
+                            },
+                            {
+                                nombre: 'Ana',
+                                apellido: 'Pérez',
+                                dni: '12345678', // DNI duplicado para mostrar error
+                                email: 'ana.perez@email.com',
+                                telefono: '11-5555-5555',
+                                plan: 'Focus 2024 - Plan Estándar',
+                                direccion: 'Av. Corrientes 3000',
+                                localidad: 'CABA',
+                                cp: '1000',
+                                mesCuota2: 'Diciembre',
+                                status: 'Error',
+                                errors: ['DNI ya existe en el sistema']
+                            }
+                        ];
+                    }
+                    
+                    // Validar datos
+                    validateImportData();
+                    
+                    // Mostrar vista previa
+                    showImportPreview();
+                    
+                } catch (error) {
+                    alert('Error al procesar el archivo: ' + error.message);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function validateImportData() {
+            const validMonths = ['Octubre', 'Noviembre', 'Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'];
+            const existingDNIs = clientsData.map(client => client.dni);
+            const existingEmails = clientsData.map(client => client.email);
+            
+            importData.forEach(client => {
+                client.errors = [];
+                
+                // Validar campos obligatorios
+                if (!client.nombre || !client.apellido || !client.dni || !client.email) {
+                    client.errors.push('Faltan campos obligatorios');
+                }
+                
+                // Validar DNI único
+                if (existingDNIs.includes(client.dni)) {
+                    client.errors.push('DNI ya existe en el sistema');
+                }
+                
+                // Validar email único
+                if (existingEmails.includes(client.email)) {
+                    client.errors.push('Email ya existe en el sistema');
+                }
+                
+                // Validar mes
+                if (!validMonths.includes(client.mesCuota2)) {
+                    client.errors.push('Mes de cuota 2 inválido');
+                }
+                
+                // Validar email formato
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (client.email && !emailRegex.test(client.email)) {
+                    client.errors.push('Formato de email inválido');
+                }
+                
+                // Actualizar status
+                client.status = client.errors.length > 0 ? 'Error' : 'Listo';
+            });
+        }
+
+        function showImportPreview() {
+            const previewDiv = document.getElementById('importPreview');
+            const tableBody = document.getElementById('previewTableBody');
+            
+            tableBody.innerHTML = '';
+            
+            importData.forEach(client => {
+                const row = document.createElement('tr');
+                row.style.backgroundColor = client.status === 'Error' ? '#ffeaea' : '#f0fdf4';
+                
+                row.innerHTML = `
+                    <td style="padding: 8px;">${client.nombre}</td>
+                    <td style="padding: 8px;">${client.apellido}</td>
+                    <td style="padding: 8px;">${client.dni}</td>
+                    <td style="padding: 8px; font-size: 0.8rem;">${client.email}</td>
+                    <td style="padding: 8px; font-size: 0.8rem;">${client.plan}</td>
+                    <td style="padding: 8px;"><strong>${client.mesCuota2}</strong></td>
+                    <td style="padding: 8px;">
+                        <span class="status-badge ${client.status === 'Error' ? 'status-rejected' : 'status-validated'}">
+                            ${client.status}
+                        </span>
+                        ${client.errors.length > 0 ? `<br><small style="color: #e74c3c;">${client.errors.join(', ')}</small>` : ''}
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            previewDiv.style.display = 'block';
+        }
+
+        function confirmImport() {
+            const validClients = importData.filter(client => client.status === 'Listo');
+            const errorClients = importData.filter(client => client.status === 'Error');
+            
+            if (validClients.length === 0) {
+                alert('No hay clientes válidos para importar');
+                return;
+            }
+            
+            if (errorClients.length > 0) {
+                const proceed = confirm(`Se encontraron ${errorClients.length} errores. ¿Continuar importando solo los ${validClients.length} clientes válidos?`);
+                if (!proceed) return;
+            }
+            
+            // Mostrar progreso de importación
+            showImportProgress(validClients.length);
+            
+            // Importar clientes válidos
+            let importedCount = 0;
+            let emailsSent = 0;
+            
+            validClients.forEach((clientData, index) => {
+                setTimeout(() => {
+                    const tempPassword = generateTempPassword();
+                    
+                    const newClient = {
+                        id: nextClientId++,
+                        nombre: clientData.nombre,
+                        apellido: clientData.apellido,
+                        dni: clientData.dni,
+                        email: clientData.email,
+                        telefono: clientData.telefono,
+                        plan: clientData.plan,
+                        direccion: clientData.direccion,
+                        localidad: clientData.localidad,
+                        cp: clientData.cp,
+                        registrationDate: new Date().toISOString().split('T')[0],
+                        mesCuota2: clientData.mesCuota2,
+                        password: tempPassword,
+                        cuotas: {}
+                    };
+                    
+                    clientsData.push(newClient);
+                    importedCount++;
+                    
+                    // Enviar email de bienvenida
+                    sendWelcomeEmail(newClient, tempPassword);
+                    emailsSent++;
+                    
+                    // Actualizar progreso
+                    updateImportProgress(importedCount, validClients.length);
+                    
+                    // Si es el último cliente, mostrar resultados finales
+                    if (importedCount === validClients.length) {
+                        setTimeout(() => {
+                            showImportResults(importedCount, errorClients.length, emailsSent);
+                            filteredData = [...clientsData];
+                            renderTable();
+                            updateStats();
+                        }, 1000);
+                    }
+                }, index * 500); // Enviar emails con delay para simular proceso real
+            });
+        }
+
+        function generateTempPassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        function showImportProgress(total) {
+            const resultsDiv = document.getElementById('importResults');
+            const summaryDiv = document.getElementById('importSummary');
+            
+            summaryDiv.innerHTML = `
+                <h4>📧 Enviando emails de bienvenida...</h4>
+                <div style="margin: 20px 0;">
+                    <div style="background: #f0f0f0; border-radius: 10px; height: 20px; overflow: hidden;">
+                        <div id="progressBar" style="background: linear-gradient(45deg, #27ae60, #2ecc71); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                    <p id="progressText" style="text-align: center; margin: 10px 0;">Preparando envío...</p>
+                </div>
+                <div id="emailLog" style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+                    <div>🚀 Iniciando proceso de importación...</div>
+                </div>
+            `;
+            
+            document.getElementById('importPreview').style.display = 'none';
+            resultsDiv.style.display = 'block';
+        }
+
+        function updateImportProgress(current, total) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const emailLog = document.getElementById('emailLog');
+            
+            const percentage = (current / total) * 100;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `Procesando ${current} de ${total} clientes...`;
+            
+            // Agregar log de email enviado
+            const lastClient = clientsData[clientsData.length - 1];
+            if (lastClient) {
+                emailLog.innerHTML += `<div>✅ Email enviado a: ${lastClient.nombre} ${lastClient.apellido} (${lastClient.email})</div>`;
+                emailLog.scrollTop = emailLog.scrollHeight;
+            }
+        }
+
+        function sendWelcomeEmail(client, password) {
+            // Simular envío de email (en aplicación real se haría mediante API de email)
+            const emailContent = generateWelcomeEmailContent(client, password);
+            
+            // Log del email en consola (en aplicación real se enviaría por SMTP)
+            console.log('📧 EMAIL ENVIADO:');
+            console.log('Para:', client.email);
+            console.log('Asunto: ¡Bienvenido a la Promoción Mundial 2026! 🏆');
+            console.log('Contenido:');
+            console.log(emailContent);
+            console.log('---');
+            
+            // Simular notificación de email enviado
+            setTimeout(() => {
+                console.log(`✅ Email confirmado como entregado a ${client.email}`);
+            }, 200);
+        }
+
+        function generateWelcomeEmailContent(client, password) {
+            const prizes = {
+                2: '🧢 Gorra Mundial 2026',
+                3: '⚽ Pelota de fútbol Alra Mundial',
+                4: '💰 Voucher $1.000.000',
+                5: '👕 Camiseta Argentina Mundial 2026',
+                6: '🚗 Polarizado',
+                7: '🇦🇷 Bandera Argentina Mundial 2026',
+                8: '⛽ Tanque lleno de nafta',
+                9: '🏖️ Voucher vacacional',
+                10: '🎁 Premio sorpresa',
+                11: '🏆 Premio especial',
+                12: '🎉 Gran premio final'
+            };
+            
+            return `
+¡FELICITACIONES ${client.nombre.toUpperCase()} ${client.apellido.toUpperCase()}! 🎉
+
+🏆 ¡BIENVENIDO A LA PROMOCIÓN MUNDIAL 2026! 🏆
+
+Nos complace informarte que has sido incluido en nuestra exclusiva Promoción Mundial 2026, donde cada cuota paga te acerca a increíbles premios mundialistas.
+
+📋 TUS DATOS DE ACCESO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 Link de acceso: https://promocionmundial2026.com/cliente
+📧 Usuario: ${client.email}
+🔐 Contraseña temporal: ${password}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 TU CRONOGRAMA DE PREMIOS:
+Tu primera cuota (Cuota 2) vence el 25 de ${client.mesCuota2}.
+
+Los premios que puedes ganar son:
+• Cuota 2: ${prizes[2]}
+• Cuota 3: ${prizes[3]}
+• Cuota 4: ${prizes[4]}
+• Cuota 5: ${prizes[5]}
+• Cuota 6: ${prizes[6]}
+• Cuota 7: ${prizes[7]}
+• Cuota 8: ${prizes[8]}
+• Cuota 9: ${prizes[9]}
+• Y muchos más premios hasta la cuota 12!
+
+🏆 PREMIO ESPECIAL MUNDIAL 2026:
+Si Argentina llega a la final del Mundial 2026, TODOS los clientes que hayan retirado su auto y tengan las cuotas al día recibirán un TV 40 PULGADAS! 📺
+
+📋 PRÓXIMOS PASOS:
+1. Ingresa al sistema con tus credenciales
+2. Cambia tu contraseña temporal por una personal
+3. Sube el comprobante de tu Cuota 2 antes del 25 de ${client.mesCuota2}
+4. ¡Espera la validación y reclama tu primer premio!
+
+📞 CONTACTO:
+Si tienes alguna consulta sobre tus cuotas o la adjudicación de tu 0KM, no dudes en contactar a tu asesor.
+
+¡Que comience la cuenta regresiva hacia el Mundial 2026! 🇦🇷
+
+Saludos,
+Equipo Promoción Mundial 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPORTANTE: Por tu seguridad, cambia tu contraseña al ingresar por primera vez.
+            `;
+        }
+
+        function showImportResults(imported, errors, emailsSent) {
+            const resultsDiv = document.getElementById('importResults');
+            const summaryDiv = document.getElementById('importSummary');
+            
+            summaryDiv.innerHTML = `
+                <h4>✅ Importación y Notificaciones Completadas</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+                        <div style="font-size: 2rem; color: #27ae60; font-weight: bold;">${imported}</div>
+                        <div>Clientes Importados</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                        <div style="font-size: 2rem; color: #1976d2; font-weight: bold;">${emailsSent}</div>
+                        <div>Emails Enviados</div>
+                    </div>
+                    ${errors > 0 ? `
+                    <div style="text-align: center; padding: 15px; background: #ffeaea; border-radius: 8px;">
+                        <div style="font-size: 2rem; color: #e74c3c; font-weight: bold;">${errors}</div>
+                        <div>Errores</div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div style="background: #f0f8ff; border: 2px solid #4a90e2; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                    <h4 style="color: #2c5aa0; margin-bottom: 15px;">📧 Emails de Bienvenida Enviados</h4>
+                    <p><strong>Cada cliente ha recibido un email con:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.6;">
+                        <li>🌐 <strong>Link de acceso:</strong> https://promocionmundial2026.com/cliente</li>
+                        <li>📧 <strong>Usuario:</strong> Su email personal</li>
+                        <li>🔐 <strong>Contraseña temporal:</strong> Generada automáticamente</li>
+                        <li>📅 <strong>Fecha de vencimiento</strong> de su primera cuota (Cuota 2)</li>
+                        <li>🎁 <strong>Lista completa de premios</strong> disponibles</li>
+                        <li>🏆 <strong>Información del premio especial</strong> Mundial 2026</li>
+                        <li>📞 <strong>Instrucciones de contacto</strong> con asesor</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 15px; margin: 15px 0;">
+                    <h4 style="color: #856404;">⚠️ Importante</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Los clientes deben cambiar su contraseña temporal al primer ingreso</li>
+                        <li>Sus cuotas 2 vencen el 25 del mes configurado para cada uno</li>
+                        <li>Pueden subir comprobantes y reclamar premios inmediatamente</li>
+                        <li>Recibirán notificaciones automáticas de validaciones</li>
+                    </ul>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <button class="action-btn validate-btn" onclick="sendTestEmail()" style="margin: 5px;">
+                        📧 Enviar Email de Prueba
+                    </button>
+                    <button class="action-btn view-btn" onclick="viewEmailLog()" style="margin: 5px;">
+                        📋 Ver Log de Emails
+                    </button>
+                    <button class="action-btn export-btn" onclick="exportNewClients()" style="margin: 5px;">
+                        📊 Exportar Nuevos Clientes
+                    </button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="action-btn validate-btn" onclick="closeImportModal()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        ✅ Finalizar Importación
+                    </button>
+                </div>
+            `;
+            
+            // Ocultar barra de progreso
+            document.getElementById('importPreview').style.display = 'none';
+        }
+
+        function sendTestEmail() {
+            const testClient = {
+                nombre: 'Usuario',
+                apellido: 'Demo',
+                email: 'demo@test.com',
+                mesCuota2: 'Octubre'
+            };
+            
+            const testPassword = 'DEMO1234';
+            const emailContent = generateWelcomeEmailContent(testClient, testPassword);
+            
+            // Mostrar el email en un modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                    <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2>📧 Vista Previa del Email de Bienvenida</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; max-height: 500px; overflow-y: auto; font-family: monospace; white-space: pre-line; font-size: 0.9rem;">
+${emailContent}
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="action-btn validate-btn" onclick="this.parentElement.parentElement.remove()">
+                            Cerrar Vista Previa
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function viewEmailLog() {
+            // Simular log de emails enviados
+            const emailLog = `
+📧 LOG DE EMAILS ENVIADOS - ${new Date().toLocaleString()}
+════════════════════════════════════════════════════════════════
+
+✅ carlos.lopez@email.com - Enviado a las ${new Date(Date.now() - 5000).toLocaleTimeString()}
+   Asunto: ¡Bienvenido a la Promoción Mundial 2026! 🏆
+   Estado: Entregado
+   
+✅ laura.garcia@email.com - Enviado a las ${new Date(Date.now() - 4500).toLocaleTimeString()}
+   Asunto: ¡Bienvenido a la Promoción Mundial 2026! 🏆
+   Estado: Entregado
+   
+✅ ana.perez@email.com - Enviado a las ${new Date(Date.now() - 4000).toLocaleTimeString()}
+   Asunto: ¡Bienvenido a la Promoción Mundial 2026! 🏆
+   Estado: Entregado
+
+📊 ESTADÍSTICAS:
+- Total enviados: 3
+- Entregados: 3
+- Rebotados: 0
+- Tasa de entrega: 100%
+
+🔧 CONFIGURACIÓN SMTP:
+- Servidor: smtp.promocionmundial2026.com
+- Puerto: 587 (TLS)
+- Estado: Conectado
+            `;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px;">
+                    <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2>📋 Log de Emails Enviados</h2>
+                    <div style="background: #2c3e50; color: #ecf0f1; padding: 20px; border-radius: 8px; margin: 20px 0; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-line; font-size: 0.85rem;">
+${emailLog}
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="action-btn export-btn" onclick="downloadEmailLog()">
+                            📥 Descargar Log
+                        </button>
+                        <button class="action-btn view-btn" onclick="this.parentElement.parentElement.remove()">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function downloadEmailLog() {
+            const logContent = `LOG DE EMAILS - PROMOCIÓN MUNDIAL 2026
+Fecha: ${new Date().toLocaleString()}
+============================================
+
+Emails enviados durante la importación:
+- Total procesado: ${importData.length} clientes
+- Emails enviados: ${importData.filter(c => c.status === 'Listo').length}
+- Errores: ${importData.filter(c => c.status === 'Error').length}
+
+Detalles de envío:
+${importData.filter(c => c.status === 'Listo').map(client => 
+`✅ ${client.email} - ${client.nombre} ${client.apellido}
+   Cuota 2: ${client.mesCuota2}
+   Contraseña generada: [CONFIDENCIAL]`
+).join('\n')}
+
+Estado del sistema:
+- Servidor SMTP: Operativo
+- Tasa de entrega: 100%
+- Tiempo total de proceso: ${Math.round(Math.random() * 30 + 10)} segundos`;
+
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `email_log_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportNewClients() {
+            const newClients = clientsData.slice(-importData.filter(c => c.status === 'Listo').length);
+            const exportData = newClients.map(client => ({
+                id: client.id,
+                nombre: client.nombre,
+                apellido: client.apellido,
+                dni: client.dni,
+                email: client.email,
+                telefono: client.telefono,
+                plan: client.plan,
+                direccion: client.direccion,
+                localidad: client.localidad,
+                cp: client.cp,
+                mesCuota2: client.mesCuota2,
+                fechaImportacion: client.registrationDate,
+                password: client.password,
+                estadoCuotas: 'Pendiente primera cuota'
+            }));
+            
+            const data = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clientes_importados_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`📊 Exportando ${newClients.length} clientes recién importados con sus credenciales de acceso.`);
+        }
+
+        function cancelImport() {
+            closeImportModal();
+        }
+    </script>
+</body>
+</html>
