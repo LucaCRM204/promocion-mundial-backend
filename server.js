@@ -15,7 +15,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
-
+// Redirect root domain to www
+app.use((req, res, next) => {
+    const host = req.get('host');
+    if (host === 'promomundial.com.ar') {
+        return res.redirect(301, `https://www.promomundial.com.ar${req.url}`);
+    }
+    next();
+});
 // Base de datos en memoria (reemplaza esto con tu DB real si tienes)
 let users = [];
 let cuotas = [];
