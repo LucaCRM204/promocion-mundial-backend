@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const { pool, initializeDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,10 +13,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'promocion-mundial-2026-secret-key-
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
-// Redirect root domain to www
+
+// Redirect root to www
 app.use((req, res, next) => {
     const host = req.get('host');
     if (host === 'promomundial.com.ar') {
@@ -23,13 +23,8 @@ app.use((req, res, next) => {
     }
     next();
 });
-// Base de datos en memoria (reemplaza esto con tu DB real si tienes)
-let users = [];
-let cuotas = [];
-let nextUserId = 1;
-let nextCuotaId = 1;
 
-// Admins predefinidos
+// Admins predefinidos (en memoria, no en BD)
 const adminUsers = [
     {
         id: 'admin-validator',
@@ -94,9 +89,7 @@ app.get('/cliente', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'healthy', 
-        timestamp: new Date().toISOString(),
-        users: users.length,
-        cuotas: cuotas.length
+        timestamp: new Date().toISOString()
     });
 });
 
@@ -112,43 +105,25 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ message: 'Faltan campos obligatorios' });
         }
         
-        const existingUser = users.find(u => u.email === email || u.dni === dni);
-        if (existingUser) {
-            return res.status(400).json({ message: 'Ya existe un usuario con ese email o DNI' });
-        }
-        
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const newUser = {
-            id: nextUserId++,
-            nombre,
-            apellido,
-            dni,
-            email,
-            telefono: telefono || '',
-            plan: plan || 'No especificado',
-            direccion: direccion || '',
-            localidad: localidad || '',
-            cp: cp || '',
-            mesCuota2: mesCuota2 || 'Octubre',
-            password: hashedPassword,
-            role: 'cliente',
-            created_at: new Date().toISOString()
-        };
-        
-        users.push(newUser);
-        
-        const token = jwt.sign(
-            { id: newUser.id, email: newUser.email, role: newUser.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
+        const result = await pool.query(
+            `INSERT INTO users (nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2, password, role)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             RETURNING id, nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2 as "mesCuota2", role, created_at`,
+            [nombre, apellido, dni, email, telefono || '', plan || 'No especificado', 
+             direccion || '', localidad || '', cp || '', mesCuota2 || 'Octubre', hashedPassword, 'cliente']
         );
         
-        const { password: _, ...userResponse } = newUser;
+        const newUser = result.rows[0];
+        const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
         
-        res.json({ token, user: userResponse });
+        res.json({ token, user: newUser });
         
     } catch (error) {
+        if (error.code === '23505') {
+            return res.status(400).json({ message: 'Email o DNI ya existe' });
+        }
         console.error('Error en registro:', error);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
@@ -164,10 +139,13 @@ app.post('/api/auth/login', async (req, res) => {
 
         let user = null;
 
+        // Buscar en admins
         if (role && role !== 'cliente') {
             user = adminUsers.find(u => u.email === email && u.role === role);
         } else {
-            user = users.find(u => u.email === email);
+            // Buscar en BD
+            const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+            user = result.rows[0];
         }
         
         if (!user) {
@@ -179,11 +157,7 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
         
-        const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
         
         const { password: _, ...userResponse } = user;
         
@@ -199,21 +173,25 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-app.get('/api/auth/profile', authenticateToken, (req, res) => {
+app.get('/api/auth/profile', authenticateToken, async (req, res) => {
     try {
         let user;
+        
         if (req.user.role !== 'cliente') {
             user = adminUsers.find(u => u.id === req.user.id);
         } else {
-            user = users.find(u => u.id === req.user.id);
+            const result = await pool.query(
+                'SELECT id, nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2 as "mesCuota2", role, created_at FROM users WHERE id = $1',
+                [req.user.id]
+            );
+            user = result.rows[0];
         }
         
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         
-        const { password, ...userResponse } = user;
-        res.json(userResponse);
+        res.json(user);
         
     } catch (error) {
         console.error('Error obteniendo perfil:', error);
@@ -225,24 +203,58 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     try {
         const { nombre, apellido, telefono, plan, direccion, localidad, cp, password } = req.body;
         
-        const userIndex = users.findIndex(u => u.id === req.user.id);
-        if (userIndex === -1) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
-        }
+        let query = 'UPDATE users SET ';
+        let values = [];
+        let valueIndex = 1;
         
-        if (nombre) users[userIndex].nombre = nombre;
-        if (apellido) users[userIndex].apellido = apellido;
-        if (telefono) users[userIndex].telefono = telefono;
-        if (plan) users[userIndex].plan = plan;
-        if (direccion) users[userIndex].direccion = direccion;
-        if (localidad) users[userIndex].localidad = localidad;
-        if (cp) users[userIndex].cp = cp;
+        if (nombre) {
+            query += `nombre = $${valueIndex}, `;
+            values.push(nombre);
+            valueIndex++;
+        }
+        if (apellido) {
+            query += `apellido = $${valueIndex}, `;
+            values.push(apellido);
+            valueIndex++;
+        }
+        if (telefono) {
+            query += `telefono = $${valueIndex}, `;
+            values.push(telefono);
+            valueIndex++;
+        }
+        if (plan) {
+            query += `plan = $${valueIndex}, `;
+            values.push(plan);
+            valueIndex++;
+        }
+        if (direccion) {
+            query += `direccion = $${valueIndex}, `;
+            values.push(direccion);
+            valueIndex++;
+        }
+        if (localidad) {
+            query += `localidad = $${valueIndex}, `;
+            values.push(localidad);
+            valueIndex++;
+        }
+        if (cp) {
+            query += `cp = $${valueIndex}, `;
+            values.push(cp);
+            valueIndex++;
+        }
         if (password) {
-            users[userIndex].password = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(password, 10);
+            query += `password = $${valueIndex}, `;
+            values.push(hashedPassword);
+            valueIndex++;
         }
         
-        const { password: _, ...userResponse } = users[userIndex];
-        res.json(userResponse);
+        query = query.slice(0, -2);
+        query += ` WHERE id = $${valueIndex} RETURNING id, nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2 as "mesCuota2", role, created_at`;
+        values.push(req.user.id);
+        
+        const result = await pool.query(query, values);
+        res.json(result.rows[0]);
         
     } catch (error) {
         console.error('Error actualizando perfil:', error);
@@ -254,17 +266,17 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
 // CUOTAS (CLIENTE)
 // ============================================
 
-app.get('/api/cuotas/mis-cuotas', authenticateToken, (req, res) => {
+app.get('/api/cuotas/mis-cuotas', authenticateToken, async (req, res) => {
     try {
-        const userCuotas = cuotas.filter(c => c.usuario_id === req.user.id);
-        res.json(userCuotas);
+        const result = await pool.query('SELECT * FROM cuotas WHERE usuario_id = $1 ORDER BY numero', [req.user.id]);
+        res.json(result.rows);
     } catch (error) {
         console.error('Error obteniendo cuotas:', error);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
-app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
+app.post('/api/cuotas/subir', authenticateToken, async (req, res) => {
     try {
         const { numero, comprobante, nombreArchivo } = req.body;
         
@@ -272,37 +284,39 @@ app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
             return res.status(400).json({ message: 'Número de cuota y archivo requeridos' });
         }
 
-        const existingCuota = cuotas.find(c => 
-            c.usuario_id === req.user.id && 
-            c.numero === parseInt(numero)
+        // Verificar si existe
+        const existing = await pool.query(
+            'SELECT * FROM cuotas WHERE usuario_id = $1 AND numero = $2',
+            [req.user.id, parseInt(numero)]
         );
 
-        if (existingCuota && existingCuota.estado === 'pendiente') {
-            return res.status(400).json({ message: 'Ya existe un comprobante pendiente' });
-        }
-
-        if (existingCuota && existingCuota.estado === 'rechazado') {
-            existingCuota.estado = 'pendiente';
-            existingCuota.archivo = comprobante;
-            existingCuota.nombre_archivo = nombreArchivo || 'comprobante.pdf';
-            existingCuota.fecha_subida = new Date().toISOString();
-            existingCuota.motivo_rechazo = null;
+        if (existing.rows.length > 0) {
+            const cuota = existing.rows[0];
             
-            return res.json({ message: 'Comprobante actualizado', cuota: existingCuota });
+            if (cuota.estado === 'pendiente') {
+                return res.status(400).json({ message: 'Ya existe un comprobante pendiente' });
+            }
+
+            if (cuota.estado === 'rechazado') {
+                // Actualizar cuota rechazada
+                const result = await pool.query(
+                    `UPDATE cuotas SET estado = 'pendiente', archivo = $1, nombre_archivo = $2, fecha_subida = NOW(), motivo_rechazo = NULL
+                     WHERE id = $3 RETURNING *`,
+                    [comprobante, nombreArchivo || 'comprobante.pdf', cuota.id]
+                );
+                
+                return res.json({ message: 'Comprobante actualizado', cuota: result.rows[0] });
+            }
         }
 
-        const nuevaCuota = {
-            id: nextCuotaId++,
-            usuario_id: req.user.id,
-            numero: parseInt(numero),
-            estado: 'pendiente',
-            archivo: comprobante,
-            nombre_archivo: nombreArchivo || 'comprobante.pdf',
-            fecha_subida: new Date().toISOString()
-        };
-
-        cuotas.push(nuevaCuota);
-        res.json({ message: 'Comprobante subido', cuota: nuevaCuota });
+        // Crear nueva cuota
+        const result = await pool.query(
+            `INSERT INTO cuotas (usuario_id, numero, estado, archivo, nombre_archivo)
+             VALUES ($1, $2, 'pendiente', $3, $4) RETURNING *`,
+            [req.user.id, parseInt(numero), comprobante, nombreArchivo || 'comprobante.pdf']
+        );
+        
+        res.json({ message: 'Comprobante subido', cuota: result.rows[0] });
         
     } catch (error) {
         console.error('Error subiendo comprobante:', error);
@@ -314,35 +328,27 @@ app.post('/api/cuotas/subir', authenticateToken, (req, res) => {
 // ADMINISTRACIÓN
 // ============================================
 
-app.get('/api/admin/clientes', authenticateToken, (req, res) => {
+app.get('/api/admin/clientes', authenticateToken, async (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const clientesConStats = users.map(user => {
-            const userCuotas = cuotas.filter(c => c.usuario_id === user.id);
-            
-            return {
-                id: user.id,
-                nombre: user.nombre,
-                apellido: user.apellido,
-                dni: user.dni,
-                email: user.email,
-                telefono: user.telefono,
-                plan: user.plan,
-                direccion: user.direccion,
-                localidad: user.localidad,
-                cp: user.cp,
-                mesCuota2: user.mesCuota2,
-                cuotasPendientes: userCuotas.filter(c => c.estado === 'pendiente').length,
-                cuotasValidadas: userCuotas.filter(c => c.estado === 'validado').length,
-                cuotasRechazadas: userCuotas.filter(c => c.estado === 'rechazado').length,
-                created_at: user.created_at
-            };
-        });
+        const result = await pool.query(`
+            SELECT 
+                u.id, u.nombre, u.apellido, u.dni, u.email, u.telefono, u.plan, 
+                u.direccion, u.localidad, u.cp, u.mes_cuota_2 as "mesCuota2", u.created_at,
+                COUNT(CASE WHEN c.estado = 'pendiente' THEN 1 END) as "cuotasPendientes",
+                COUNT(CASE WHEN c.estado = 'validado' THEN 1 END) as "cuotasValidadas",
+                COUNT(CASE WHEN c.estado = 'rechazado' THEN 1 END) as "cuotasRechazadas"
+            FROM users u
+            LEFT JOIN cuotas c ON u.id = c.usuario_id
+            WHERE u.role = 'cliente'
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        `);
 
-        res.json(clientesConStats);
+        res.json(result.rows);
         
     } catch (error) {
         console.error('Error:', error);
@@ -350,81 +356,102 @@ app.get('/api/admin/clientes', authenticateToken, (req, res) => {
     }
 });
 
-app.get('/api/admin/clientes/:id', authenticateToken, (req, res) => {
+app.get('/api/admin/clientes/:id', authenticateToken, async (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const user = users.find(u => u.id === parseInt(req.params.id));
-        if (!user) {
+        const result = await pool.query(
+            'SELECT id, nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2 as "mesCuota2", role, created_at FROM users WHERE id = $1',
+            [parseInt(req.params.id)]
+        );
+        
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Cliente no encontrado' });
         }
         
-        const { password, ...userResponse } = user;
-        res.json(userResponse);
+        res.json(result.rows[0]);
         
     } catch (error) {
         res.status(500).json({ message: 'Error interno' });
     }
 });
 
-app.get('/api/admin/clientes/:id/cuotas', authenticateToken, (req, res) => {
+app.get('/api/admin/clientes/:id/cuotas', authenticateToken, async (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
-        const userCuotas = cuotas.filter(c => c.usuario_id === parseInt(req.params.id));
-        res.json(userCuotas);
+        const result = await pool.query(
+            'SELECT * FROM cuotas WHERE usuario_id = $1 ORDER BY numero',
+            [parseInt(req.params.id)]
+        );
+        
+        res.json(result.rows);
         
     } catch (error) {
         res.status(500).json({ message: 'Error interno' });
     }
 });
 
-app.put('/api/admin/cuotas/:id/validar', authenticateToken, (req, res) => {
+app.put('/api/admin/cuotas/:id/validar', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'validator' && req.user.role !== 'owner') {
             return res.status(403).json({ message: 'Sin permisos' });
         }
 
-        const cuota = cuotas.find(c => c.id === parseInt(req.params.id));
-        if (!cuota) {
-            return res.status(404).json({ message: 'Cuota no encontrada' });
-        }
-
         const { validar, motivo } = req.body;
-
+        
+        let result;
         if (validar) {
-            cuota.estado = 'validado';
-            cuota.fecha_validacion = new Date().toISOString();
-            cuota.validado_por = req.user.email;
+            result = await pool.query(
+                `UPDATE cuotas SET estado = 'validado', fecha_validacion = NOW(), validado_por = $1
+                 WHERE id = $2 RETURNING *`,
+                [req.user.email, parseInt(req.params.id)]
+            );
         } else {
-            cuota.estado = 'rechazado';
-            cuota.motivo_rechazo = motivo || 'No especificado';
-            cuota.rechazado_por = req.user.email;
+            result = await pool.query(
+                `UPDATE cuotas SET estado = 'rechazado', motivo_rechazo = $1, rechazado_por = $2
+                 WHERE id = $3 RETURNING *`,
+                [motivo || 'No especificado', req.user.email, parseInt(req.params.id)]
+            );
         }
         
-        res.json({ message: validar ? 'Validada' : 'Rechazada', cuota });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Cuota no encontrada' });
+        }
+        
+        res.json({ message: validar ? 'Validada' : 'Rechazada', cuota: result.rows[0] });
         
     } catch (error) {
         res.status(500).json({ message: 'Error interno' });
     }
 });
 
-app.get('/api/admin/estadisticas', authenticateToken, (req, res) => {
+app.get('/api/admin/estadisticas', authenticateToken, async (req, res) => {
     try {
         if (req.user.role === 'cliente') {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
 
+        const clientesResult = await pool.query('SELECT COUNT(*) FROM users WHERE role = $1', ['cliente']);
+        const cuotasResult = await pool.query(`
+            SELECT 
+                COUNT(*) as total,
+                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
+                COUNT(CASE WHEN estado = 'validado' THEN 1 END) as validadas,
+                COUNT(CASE WHEN estado = 'rechazado' THEN 1 END) as rechazadas
+            FROM cuotas
+        `);
+
         res.json({
-            totalClientes: users.length,
-            totalCuotas: cuotas.length,
-            cuotasPendientes: cuotas.filter(c => c.estado === 'pendiente').length,
-            cuotasValidadas: cuotas.filter(c => c.estado === 'validado').length,
-            cuotasRechazadas: cuotas.filter(c => c.estado === 'rechazado').length
+            totalClientes: parseInt(clientesResult.rows[0].count),
+            totalCuotas: parseInt(cuotasResult.rows[0].total),
+            cuotasPendientes: parseInt(cuotasResult.rows[0].pendientes),
+            cuotasValidadas: parseInt(cuotasResult.rows[0].validadas),
+            cuotasRechazadas: parseInt(cuotasResult.rows[0].rechazadas)
         });
         
     } catch (error) {
@@ -454,31 +481,38 @@ app.post('/api/admin/importar-clientes', authenticateToken, async (req, res) => 
                     continue;
                 }
 
-                const existe = users.find(u => u.email === clienteData.email || u.dni === clienteData.dni);
-                if (existe) {
-                    errores.push({ cliente: clienteData, error: 'Ya existe' });
-                    continue;
-                }
-
                 const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
                 const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-                const nuevoCliente = {
-                    id: nextUserId++,
-                    ...clienteData,
-                    mesCuota2: clienteData.mesCuota2 || 'Octubre',
-                    password: hashedPassword,
-                    passwordTemporal: tempPassword,
-                    role: 'cliente',
-                    created_at: new Date().toISOString()
-                };
+                const result = await pool.query(
+                    `INSERT INTO users (nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2, password, role)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                     RETURNING id, nombre, apellido, dni, email, telefono, plan, direccion, localidad, cp, mes_cuota_2 as "mesCuota2", role, created_at`,
+                    [
+                        clienteData.nombre,
+                        clienteData.apellido,
+                        clienteData.dni,
+                        clienteData.email,
+                        clienteData.telefono || '',
+                        clienteData.plan || 'No especificado',
+                        clienteData.direccion || '',
+                        clienteData.localidad || '',
+                        clienteData.cp || '',
+                        clienteData.mesCuota2 || 'Octubre',
+                        hashedPassword,
+                        'cliente'
+                    ]
+                );
 
-                users.push(nuevoCliente);
-                const { password, ...clienteResponse } = nuevoCliente;
-                importados.push(clienteResponse);
+                const nuevoCliente = { ...result.rows[0], passwordTemporal: tempPassword };
+                importados.push(nuevoCliente);
 
             } catch (error) {
-                errores.push({ cliente: clienteData, error: error.message });
+                if (error.code === '23505') {
+                    errores.push({ cliente: clienteData, error: 'Ya existe' });
+                } else {
+                    errores.push({ cliente: clienteData, error: error.message });
+                }
             }
         }
 
@@ -499,19 +533,25 @@ app.use((req, res) => {
 });
 
 // Iniciar
-app.listen(PORT, () => {
-    console.log('\n===========================================');
-    console.log('PROMOCION MUNDIAL 2026 - ACTIVO');
-    console.log('===========================================');
-    console.log(`Puerto: ${PORT}`);
-    console.log('\nCREDENCIALES ADMIN:');
-    console.log('validator@mundial2026.com / validator2026');
-    console.log('responsable@mundial2026.com / responsable2026');
-    console.log('owner@mundial2026.com / owner2026');
-    console.log('\nRUTAS:');
-    console.log('/ -> Panel Cliente');
-    console.log('/admin -> Panel Administracion');
-    console.log('===========================================\n');
+initializeDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log('\n===========================================');
+        console.log('PROMOCION MUNDIAL 2026 - ACTIVO');
+        console.log('===========================================');
+        console.log(`Puerto: ${PORT}`);
+        console.log('\nCREDENCIALES ADMIN:');
+        console.log('validator@mundial2026.com / validator2026');
+        console.log('responsable@mundial2026.com / responsable2026');
+        console.log('owner@mundial2026.com / owner2026');
+        console.log('\nRUTAS:');
+        console.log('/ -> Panel Cliente');
+        console.log('/admin -> Panel Administracion');
+        console.log('\nBASE DE DATOS: PostgreSQL conectada');
+        console.log('===========================================\n');
+    });
+}).catch(error => {
+    console.error('Error fatal al iniciar:', error);
+    process.exit(1);
 });
 
 module.exports = app;
