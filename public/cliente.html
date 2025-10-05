@@ -1280,14 +1280,14 @@
     </style>
 </head>
 <body>
-            <!-- Celebración de Gol -->
-        <div class="gol-celebration" id="golCelebration">
-            <div class="celebration-overlay"></div>
-            <div class="gol-text" id="golText">¡GOOOOOOOL!</div>
-        </div>
-        <div class="sound-effect" id="soundEffect">🔊📢🎵</div>
+    <!-- Celebración de Gol -->
+    <div class="gol-celebration" id="golCelebration">
+        <div class="celebration-overlay"></div>
+        <div class="gol-text" id="golText">¡GOOOOOOOL!</div>
+    </div>
+    <div class="sound-effect" id="soundEffect">🔊📢🎵</div>
 
-        <!-- Fondo Mundialista Argentino Súper Mejorado -->
+    <!-- Fondo Mundialista Argentino Súper Mejorado -->
     <div class="world-cup-bg">
         <!-- BANDERAS LARGAS DE CANCHA (como las que cuelgan) -->
         <div class="floating-element bandera-larga"></div>
@@ -1416,9 +1416,6 @@
                 </div>
 
                 <button type="submit" class="login-btn">Registrarme</button>
-                <button type="button" class="login-btn" onclick="demoLogin()" style="background: #2ed573; margin-top: 10px;">
-                    🎯 ACCESO DEMO
-                </button>
                 <p style="text-align: center; margin-top: 15px;">
                     ¿Ya tienes cuenta? <a href="#" onclick="showLoginForm()" style="color: #667eea; text-decoration: none; font-weight: bold;">Inicia Sesión</a>
                 </p>
@@ -1435,9 +1432,6 @@
                     <input type="password" id="loginPassword" name="loginPassword" required placeholder="Tu contraseña">
                 </div>
                 <button type="submit" class="login-btn">Iniciar Sesión</button>
-                <button type="button" class="login-btn" onclick="demoLogin()" style="background: #2ed573; margin-top: 10px;">
-                    🎯 ACCESO DEMO
-                </button>
                 <p style="text-align: center; margin-top: 15px;">
                     ¿No tienes cuenta? <a href="#" onclick="showRegisterForm()" style="color: #667eea; text-decoration: none; font-weight: bold;">Regístrate</a>
                 </p>
@@ -1646,75 +1640,12 @@
             document.getElementById('formTitle').textContent = 'Inicia sesión con tu email y contraseña';
         }
 
-        function demoLogin() {
-            // Crear usuario demo si no existe
-            const demoEmail = 'demo@mundial2026.com';
-            
-            if (!registeredUsers[demoEmail]) {
-                const demoUser = {
-                    nombre: 'Juan Carlos',
-                    apellido: 'Pérez',
-                    dni: '12345678',
-                    email: demoEmail,
-                    telefono: '11-1234-5678',
-                    plan: 'Corolla 2024 - Plan Premium',
-                    direccion: 'Av. Corrientes 1234',
-                    localidad: 'Buenos Aires',
-                    cp: '1000',
-                    password: 'demo123',
-                    registrationDate: new Date().toISOString()
-                };
-                
-                registeredUsers[demoEmail] = demoUser;
-                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-            }
-            
-            // Auto-login con usuario demo
-            currentUser = registeredUsers[demoEmail];
-            
-            // Ocultar sección de login
-            document.getElementById('loginSection').style.display = 'none';
-            
-            // Mostrar sección de beneficios
-            document.getElementById('benefitsSection').style.display = 'block';
-            
-            // Mostrar botón de logout y perfil
-            console.log('Demo login - mostrando elementos UI'); // Debug
-            const logoutBtn = document.getElementById('logoutBtn');
-            const profileMenu = document.getElementById('profileMenu');
-            
-            if (logoutBtn) {
-                logoutBtn.style.display = 'block';
-                console.log('Logout button mostrado');
-            }
-            
-            if (profileMenu) {
-                profileMenu.style.display = 'block';
-                console.log('Profile menu mostrado');
-            }
-            
-            // Personalizar mensaje de bienvenida
-            document.getElementById('welcomeText').textContent = 
-                `¡Bienvenido/a ${currentUser.nombre} ${currentUser.apellido}! (Modo Demo)`;
-            
-            // Cargar información del perfil
-            loadProfileInfo();
-            
-            // Cargar datos del usuario
-            loadUserData();
-            
-            // Guardar sesión actual
-            localStorage.setItem('currentSession', demoEmail);
-            
-            alert('🎯 ¡Acceso Demo Activado! Puedes probar todas las funcionalidades. Busca el icono 👤 en la esquina superior derecha.');
-        }
-
         function register(event) {
             event.preventDefault();
             
             const nombre = document.getElementById('nombre').value;
             const apellido = document.getElementById('apellido').value;
-            const dni = document.getElementById('dni').value.replace(/[^0-9]/g, ''); // Limpiar DNI
+            const dni = document.getElementById('dni').value.replace(/[^0-9]/g, '');
             const email = document.getElementById('email').value.toLowerCase();
             const telefono = document.getElementById('telefono').value;
             const plan = document.getElementById('plan').value || 'No especificado';
@@ -1723,17 +1654,14 @@
             const cp = document.getElementById('cp').value;
             const password = document.getElementById('password').value;
             
-            // Verificar si el email ya está registrado
             const existingUser = Object.values(registeredUsers).find(user => user.email === email);
             if (existingUser) {
                 alert('Este email ya está registrado. Por favor, inicia sesión o usa un email diferente.');
                 return;
             }
             
-            // Crear ID único para el usuario (email como clave principal)
             const userId = email;
             
-            // Registrar nuevo usuario
             const newUser = {
                 nombre,
                 apellido,
@@ -1753,10 +1681,7 @@
             
             alert(`¡Registro exitoso! ${nombre} ${apellido}, ya puedes iniciar sesión con tu email y contraseña.`);
             
-            // Limpiar formulario de registro
             document.getElementById('registerForm').reset();
-            
-            // Mostrar formulario de login con email pre-completado
             showLoginForm();
             document.getElementById('loginEmail').value = email;
         }
@@ -1767,7 +1692,6 @@
             const email = document.getElementById('loginEmail').value.toLowerCase();
             const password = document.getElementById('loginPassword').value;
             
-            // Verificar credenciales
             const user = registeredUsers[email];
             if (!user) {
                 alert('Email no encontrado. Por favor, regístrate primero.');
@@ -1779,67 +1703,39 @@
                 return;
             }
             
-            // Login exitoso
             currentUser = user;
             
-            // Ocultar sección de login
             document.getElementById('loginSection').style.display = 'none';
-            
-            // Mostrar sección de beneficios
             document.getElementById('benefitsSection').style.display = 'block';
-            
-            // Mostrar botón de logout y perfil
-            console.log('Mostrando botones de logout y perfil'); // Debug
             document.getElementById('logoutBtn').style.display = 'block';
             document.getElementById('profileMenu').style.display = 'block';
             
-            // Personalizar mensaje de bienvenida
             document.getElementById('welcomeText').textContent = 
                 `¡Bienvenido/a ${user.nombre} ${user.apellido}!`;
             
-            // Cargar información del perfil
             loadProfileInfo();
-            
-            // Cargar datos del usuario
             loadUserData();
             
-            // Guardar sesión actual
             localStorage.setItem('currentSession', email);
-            
-            // Limpiar formulario de login
             document.getElementById('loginForm').reset();
         }
         
         function logout() {
             currentUser = null;
             
-            // Ocultar sección de beneficios
             document.getElementById('benefitsSection').style.display = 'none';
-            
-            // Mostrar sección de login
             document.getElementById('loginSection').style.display = 'block';
-            
-            // Ocultar botón de logout y perfil
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('profileMenu').style.display = 'none';
             
-            // Mostrar formulario de login por defecto
             showLoginForm();
-            
-            // Limpiar sesión actual
             localStorage.removeItem('currentSession');
         }
 
-        function displayClientInfo() {
-            // Esta función ya no se usa, se reemplazó por loadProfileInfo()
-        }
-
         function loadProfileInfo() {
-            // Actualizar nombre en el header del perfil
             document.getElementById('profileName').textContent = 
                 `${currentUser.nombre} ${currentUser.apellido}`;
             
-            // Cargar información en el dropdown
             const profileInfo = document.getElementById('profileInfo');
             profileInfo.innerHTML = `
                 <div class="profile-info-item">
@@ -1877,7 +1773,6 @@
             const dropdown = document.getElementById('profileDropdown');
             if (dropdown.style.display === 'none' || dropdown.style.display === '') {
                 dropdown.style.display = 'block';
-                // Cerrar al hacer clic fuera
                 setTimeout(() => {
                     document.addEventListener('click', closeProfileOnOutsideClick);
                 }, 100);
@@ -1900,7 +1795,6 @@
         function editProfile() {
             const isEditing = confirm('¿Deseas editar tus datos personales? Esto te llevará de vuelta al formulario de registro.');
             if (isEditing) {
-                // Llenar formulario de registro con datos actuales
                 document.getElementById('nombre').value = currentUser.nombre;
                 document.getElementById('apellido').value = currentUser.apellido;
                 document.getElementById('dni').value = currentUser.dni;
@@ -1912,7 +1806,6 @@
                 document.getElementById('cp').value = currentUser.cp;
                 document.getElementById('password').value = currentUser.password;
                 
-                // Mostrar formulario de registro en modo edición
                 document.getElementById('benefitsSection').style.display = 'none';
                 document.getElementById('loginSection').style.display = 'block';
                 document.getElementById('logoutBtn').style.display = 'none';
@@ -1920,11 +1813,9 @@
                 showRegisterForm();
                 document.getElementById('formTitle').textContent = 'Editar mis datos personales';
                 
-                // Cambiar texto del botón
                 const submitBtn = document.querySelector('#registerForm button[type="submit"]');
                 submitBtn.textContent = 'Actualizar Datos';
                 
-                // Modificar el handler del formulario para actualización
                 document.getElementById('registerForm').onsubmit = function(event) {
                     event.preventDefault();
                     updateProfile();
@@ -1944,7 +1835,6 @@
             const cp = document.getElementById('cp').value;
             const password = document.getElementById('password').value;
             
-            // Si cambió el email, verificar que no esté en uso
             if (email !== currentUser.email) {
                 const existingUser = Object.values(registeredUsers).find(user => user.email === email);
                 if (existingUser) {
@@ -1952,11 +1842,9 @@
                     return;
                 }
                 
-                // Eliminar la entrada anterior y crear una nueva con el nuevo email
                 delete registeredUsers[currentUser.email];
             }
             
-            // Actualizar datos del usuario
             const updatedUser = {
                 ...currentUser,
                 nombre,
@@ -1971,24 +1859,19 @@
                 password
             };
             
-            // Actualizar en la base de datos local
             registeredUsers[email] = updatedUser;
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             
-            // Actualizar usuario actual y sesión
             currentUser = updatedUser;
             localStorage.setItem('currentSession', email);
             
-            // Volver a la sección de beneficios
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('benefitsSection').style.display = 'block';
             document.getElementById('logoutBtn').style.display = 'block';
             document.getElementById('profileMenu').style.display = 'block';
             
-            // Actualizar información mostrada
             loadProfileInfo();
             
-            // Restaurar formulario original
             document.getElementById('registerForm').onsubmit = register;
             const submitBtn = document.querySelector('#registerForm button[type="submit"]');
             submitBtn.textContent = 'Registrarme';
@@ -2002,11 +1885,9 @@
             const file = fileInput.files[0];
             
             if (file) {
-                // Simular subida de archivo
                 const fileName = file.name;
                 const fileSize = (file.size / 1024).toFixed(1) + ' KB';
                 
-                // Guardar información del archivo
                 uploadedFiles[cuotaNumber] = {
                     name: fileName,
                     size: fileSize,
@@ -2014,7 +1895,6 @@
                     user: currentUser
                 };
                 
-                // Mostrar archivo subido
                 const uploadedDiv = document.getElementById(`uploaded-cuota-${cuotaNumber}`);
                 uploadedDiv.innerHTML = `
                     <span>📎 ${fileName} (${fileSize})</span>
@@ -2022,13 +1902,8 @@
                 `;
                 uploadedDiv.style.display = 'flex';
                 
-                // Cambiar estado a pendiente
                 updateCuotaStatus(cuotaNumber, 'pending');
-                
-                // Agregar a validaciones pendientes
                 addToPendingValidations(cuotaNumber);
-                
-                // Guardar en localStorage
                 saveUserData();
                 
                 alert('¡Comprobante subido exitosamente! Será validado en las próximas 24-48 horas.');
@@ -2039,33 +1914,25 @@
             const card = document.querySelector(`[data-cuota="${cuotaNumber}"]`);
             const badge = card.querySelector('.status-badge');
             
-            // Remover clases anteriores
             card.classList.remove('locked', 'pending', 'validated');
             badge.classList.remove('status-locked', 'status-pending', 'status-validated');
             
-            // Agregar nuevas clases
             card.classList.add(status);
             badge.classList.add(`status-${status}`);
             
-            // Actualizar texto del badge
             switch(status) {
                 case 'locked':
                     badge.textContent = 'Bloqueado';
-                    // Remover event listener si existe
                     card.removeEventListener('click', handleValidatedCardClick);
                     break;
                 case 'pending':
                     badge.textContent = 'Pendiente';
-                    // Remover event listener si existe
                     card.removeEventListener('click', handleValidatedCardClick);
                     break;
                 case 'validated':
                     badge.textContent = '¡GANASTE!';
-                    // AGREGAR el overlay y texto de GOOOOOOL solo cuando se valida
                     addGolElements(cuotaNumber);
-                    // Agregar botón de reclamar premio
                     addClaimButton(cuotaNumber);
-                    // Agregar event listener para celebración
                     card.addEventListener('click', () => handleValidatedCardClick(cuotaNumber));
                     break;
             }
@@ -2074,17 +1941,14 @@
         }
 
         function addGolElements(cuotaNumber) {
-            // Agregar los elementos de GOOOOOOL solo cuando se valida
             const card = document.querySelector(`[data-cuota="${cuotaNumber}"]`);
             
-            // Crear overlay si no existe
             if (!card.querySelector('.gol-overlay')) {
                 const golOverlay = document.createElement('div');
                 golOverlay.className = 'gol-overlay';
                 card.appendChild(golOverlay);
             }
             
-            // Crear texto si no existe  
             if (!card.querySelector('.gol-text-card')) {
                 const golTextCard = document.createElement('div');
                 golTextCard.className = 'gol-text-card';
@@ -2094,15 +1958,29 @@
         }
 
         function handleValidatedCardClick(cuotaNumber) {
-            // ¡MOSTRAR GOOOOOOL CADA VEZ QUE EL CLIENTE TOCA LA TARJETA VALIDADA! 🎉
             showGolInCard(cuotaNumber);
+        }
+
+        function showGolInCard(cuotaNumber) {
+            const card = document.querySelector(`[data-cuota="${cuotaNumber}"]`);
+            const overlay = card.querySelector('.gol-overlay');
+            const text = card.querySelector('.gol-text-card');
+            
+            if (overlay && text) {
+                overlay.style.display = 'block';
+                text.style.display = 'block';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    text.style.display = 'none';
+                }, 4000);
+            }
         }
 
         function addClaimButton(cuotaNumber) {
             const card = document.querySelector(`[data-cuota="${cuotaNumber}"]`);
             const uploadSection = card.querySelector('.upload-section');
             
-            // Verificar si ya existe el botón
             if (!card.querySelector('.claim-section')) {
                 const claimSection = document.createElement('div');
                 claimSection.className = 'claim-section';
@@ -2134,7 +2012,6 @@
             const pendingDiv = document.getElementById('pendingValidations');
             const userKey = `${currentUser.nombre}_${currentUser.apellido}_cuota_${cuotaNumber}`;
             
-            // Evitar duplicados
             if (document.getElementById(`validation-${userKey}`)) {
                 return;
             }
@@ -2167,21 +2044,16 @@
         function validatePayment(userKey, cuotaNumber, isValid) {
             if (isValid) {
                 updateCuotaStatus(cuotaNumber, 'validated');
-                
-                // ¡CELEBRACIÓN DE GOL! 🎉⚽
                 triggerGolCelebration(cuotaNumber);
-                
                 alert(`Comprobante de cuota ${cuotaNumber} VALIDADO. El cliente puede reclamar su premio.`);
             } else {
                 updateCuotaStatus(cuotaNumber, 'locked');
-                // Limpiar archivo subido
                 const uploadedDiv = document.getElementById(`uploaded-cuota-${cuotaNumber}`);
                 uploadedDiv.style.display = 'none';
                 delete uploadedFiles[cuotaNumber];
                 alert(`Comprobante de cuota ${cuotaNumber} RECHAZADO. El cliente debe subir un nuevo comprobante.`);
             }
             
-            // Remover de validaciones pendientes
             const validationCard = document.getElementById(`validation-${userKey}`);
             if (validationCard) {
                 validationCard.remove();
@@ -2202,30 +2074,20 @@
                 9: 'VOUCHER VACAS'
             };
             
-            // REPRODUCIR SONIDO DE GOL! 🔊
-            playGolSound();
-            
-            // Mostrar celebración
             const celebration = document.getElementById('golCelebration');
             const golText = document.getElementById('golText');
             const soundEffect = document.getElementById('soundEffect');
             const overlay = celebration.querySelector('.celebration-overlay');
             
-            // Cambiar texto según el premio
             golText.innerHTML = `¡GOOOOOOOL!<br><span style="font-size: 2rem;">🎉 ${prizes[cuotaNumber]} 🎉</span><br><span style="font-size: 1.5rem;">🇦🇷 ¡VAMOS ARGENTINA! 🇦🇷</span>`;
             
-            // Mostrar elementos
             celebration.style.display = 'block';
             overlay.style.display = 'block';
             soundEffect.style.display = 'block';
             
-            // Crear MUCHOS más papelitos
             createConfetti();
-            
-            // Simular grito de gol con emojis sonoros
             animateSoundEffect();
             
-            // Hacer vibrar la tarjeta
             const card = document.querySelector(`[data-cuota="${cuotaNumber}"]`);
             if (card) {
                 card.style.animation = 'prize-celebration 0.6s ease-in-out 3';
@@ -2234,135 +2096,20 @@
                 }, 1800);
             }
             
-            // Vibrar el dispositivo si es posible
             if (navigator.vibrate) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
             }
             
-            // Ocultar después de 5 segundos (más tiempo para disfrutar)
             setTimeout(() => {
                 celebration.style.display = 'none';
                 soundEffect.style.display = 'none';
             }, 5000);
         }
 
-        function playGolSound() {
-            // ¡SOLO VISUAL, SIN SONIDOS! 📝⚽
-            // No hay sonidos de voz - solo la celebración visual
-        }
-
-        function speakGol() {
-            // FUNCIÓN DESHABILITADA - Solo celebración visual
-            return;
-        }
-
-        function playSimpleGolFrequency() {
-            // FUNCIÓN DESHABILITADA - Solo visual
-            return;
-        }
-
-        function playGolSimple(audioContext) {
-            // FUNCIÓN DESHABILITADA - Solo visual
-            return;
-        }
-
-        function playGolazoHermano(audioContext) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // "GOLAZO HERMANO" con cadencia argentina
-            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(500, audioContext.currentTime + 0.4);
-            oscillator.frequency.exponentialRampToValueAtTime(450, audioContext.currentTime + 0.8);
-            
-            gainNode.gain.setValueAtTime(0.8, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
-            
-            oscillator.type = 'triangle';
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 1.0);
-        }
-
-        function playVamosCarajo(audioContext) {
-            // FUNCIÓN ELIMINADA - Solo quedan las dos frases principales
-            return;
-        }
-
-        function playDaleArgentina(audioContext) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // "DALE ARGENTINA" con orgullo nacional
-            oscillator.frequency.setValueAtTime(350, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(480, audioContext.currentTime + 0.6);
-            oscillator.frequency.exponentialRampToValueAtTime(420, audioContext.currentTime + 1.2);
-            
-            gainNode.gain.setValueAtTime(0.85, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
-            
-            oscillator.type = 'sine';
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 1.5);
-        }
-
-        function playCheerSound(audioContext) {
-            // FUNCIÓN DESHABILITADA - Solo voz argentina
-            return;
-        }
-
-        function playCelebrationSound(audioContext) {
-            // FUNCIÓN DESHABILITADA - Solo voz argentina  
-            return;
-        }
-
-        // Activar sonido y cargar voces en primera interacción del usuario
-        let audioEnabled = false;
-        function enableAudio() {
-            if (!audioEnabled) {
-                // Crear contexto silencioso para habilitar audio
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.01);
-                
-                // Cargar voces de síntesis de voz
-                if ('speechSynthesis' in window) {
-                    speechSynthesis.getVoices();
-                }
-                
-                audioEnabled = true;
-                console.log('🔊 Audio habilitado - ¡Preparado para el GOOOOOOL!');
-            }
-        }
-
-        // Habilitar audio en primera interacción
-        document.addEventListener('click', enableAudio, { once: true });
-        document.addEventListener('touchstart', enableAudio, { once: true });
-
-        // Cargar voces cuando estén disponibles
-        if ('speechSynthesis' in window) {
-            speechSynthesis.addEventListener('voiceschanged', () => {
-                console.log('🗣️ Voces cargadas para el grito de gol');
-            });
-        }
-
         function createConfetti() {
             const celebration = document.getElementById('golCelebration');
             const colors = ['#74b9ff', '#ffffff', '#f39c12', '#e74c3c', '#2ecc71', '#9b59b6', '#74b9ff', '#ffffff'];
             
-            // Crear MUCHÍSIMOS papelitos (200!)
             for (let i = 0; i < 200; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
@@ -2371,7 +2118,6 @@
                 confetti.style.animationDuration = (Math.random() * 4 + 2) + 's';
                 confetti.style.animationDelay = Math.random() * 1 + 's';
                 
-                // Más variedad de formas
                 const randomShape = Math.random();
                 if (randomShape > 0.7) {
                     confetti.style.borderRadius = '50%';
@@ -2389,7 +2135,6 @@
                 
                 celebration.appendChild(confetti);
                 
-                // Remover después de la animación
                 setTimeout(() => {
                     if (confetti.parentNode) {
                         confetti.parentNode.removeChild(confetti);
@@ -2399,7 +2144,6 @@
         }
 
         function animateSoundEffect() {
-            // VUVUZELAS Y CORNETAS COMO EN EL ESTADIO! 🎺📯
             const soundEffect = document.getElementById('soundEffect');
             const stadiumSounds = [
                 '🎺🎺🎺', '📯📯📯', '🥁🥁🥁', '🔊🔊🔊', 
@@ -2412,10 +2156,10 @@
                 soundEffect.textContent = stadiumSounds[counter % stadiumSounds.length];
                 counter++;
                 
-                if (counter > 12) { // Más tiempo de efectos
+                if (counter > 12) {
                     clearInterval(stadiumInterval);
                 }
-            }, 300); // Más rápido para más energía
+            }, 300);
         }
 
         function toggleAdmin() {
@@ -2448,7 +2192,6 @@
                     uploadedFiles = data.uploadedFiles || {};
                     validationStatus = data.validationStatus || {};
                     
-                    // Restaurar UI
                     Object.keys(validationStatus).forEach(cuotaNumber => {
                         updateCuotaStatus(cuotaNumber, validationStatus[cuotaNumber]);
                         
@@ -2481,17 +2224,16 @@
             alert('¡Nos pondremos en contacto contigo pronto! Gracias por tu interés en la Promoción Mundial 2026.');
         }
         
-        // Verificar si hay usuario logueado al cargar la página
         window.onload = function() {
             const currentSession = localStorage.getItem('currentSession');
             if (currentSession && registeredUsers[currentSession]) {
                 const user = registeredUsers[currentSession];
                 currentUser = user;
                 
-                // Auto-login
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('benefitsSection').style.display = 'block';
                 document.getElementById('logoutBtn').style.display = 'block';
+                document.getElementById('profileMenu').style.display = 'block';
                 
                 document.getElementById('welcomeText').textContent = 
                     `¡Bienvenido/a ${user.nombre} ${user.apellido}!`;
@@ -2499,7 +2241,6 @@
                 loadProfileInfo();
                 loadUserData();
             } else {
-                // Mostrar formulario de login por defecto
                 showLoginForm();
             }
         };
